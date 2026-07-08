@@ -1,0 +1,31 @@
+lesson:
+  id: state-lives-in-accounts
+  title: "Where state lives: accounts, not storage variables"
+  objectives:
+    - bloom: explain
+      statement: "explain why Solana programs are stateless and where their state lives"
+    - bloom: implement
+      statement: "create and write to a data account from a program"
+  prerequisites:
+    - hello-and-toolchain
+    - compute-and-errors
+  hook: "In Solidity, `uint public count;` just... persists. You wrote to storage and forgot about it. Your first Solana program has nowhere to put `count`. Where did storage go?"
+  concept_spec: "Programs are stateless code; state lives in separate accounts the caller passes in. Teach by building a counter whose value lives in a data account. One new element: the data account (defer PDAs to next lesson)."
+  artifact_spec: "A counter program with an initialize and increment; the count stored in a plain data account."
+  exercise_spec: "Completion: fill in the account's space/size (TODO). Solo: add a decrement. Accept: value persists across two separate transactions; test passes."
+  the_tradeoff: "Separating code from state buys Solana parallelism (txs touching different accounts run concurrently) — BUT you must pass every account a program will touch, and size/rent it yourself up front."
+  just_in_time:
+    define:
+      - account
+      - data-account
+      - rent
+      - account-space
+    footguns:
+      - "under-sizing the account"
+      - "forgetting the account is not auto-created"
+  assessment: "anchor test: increment persists across txs; reading back returns the new value"
+  difficulty: 2
+  fading: "fully worked counter shown; completion problem for sizing; solo for decrement"
+  dominant_job: derive-why
+  voice_notes: "contested 'why is it built this way' — Vitalik craft over the spine; the parallelism payoff is a great order-of-magnitude seam. Map from Solidity storage explicitly."
+  est_length: "1300 words / ~13 min"

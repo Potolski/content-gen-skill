@@ -1,0 +1,72 @@
+pedagogy:
+  fading_schedule:
+    - lesson: hello-and-toolchain
+      mode: worked
+      difficulty: 1
+    - lesson: compute-and-errors
+      mode: worked
+      difficulty: 1
+    - lesson: state-lives-in-accounts
+      mode: worked
+      difficulty: 2
+    - lesson: per-user-pda-vault
+      mode: completion
+      difficulty: 2
+    - lesson: token-deposit-cpi
+      mode: completion
+      difficulty: 3
+    - lesson: capstone-ship-your-own
+      mode: solo
+      difficulty: 3
+  difficulty_curve:
+    - 1
+    - 1
+    - 2
+    - 2
+    - 3
+    - 3
+  worked_examples_removed_after: module-pdas
+  spiral:
+    - skill: account-model
+      reappears_in:
+        - per-user-pda-vault
+        - token-deposit-cpi
+        - capstone-ship-your-own
+    - skill: pdas
+      reappears_in:
+        - token-deposit-cpi
+        - capstone-ship-your-own
+  retrieval_checkpoints:
+    - checkpoint-accounts
+  cumulative_checkpoint_before: capstone-ship-your-own
+release:
+  mode: weekly-drip
+  start_date: 2026-07-06
+  timezone: America/Sao_Paulo
+  schedule:
+    - week: 1
+      publish:
+        - hello-and-toolchain
+        - compute-and-errors
+      est_effort_hours: 6
+    - week: 2
+      publish:
+        - state-lives-in-accounts
+        - per-user-pda-vault
+      est_effort_hours: 9
+    - week: 3
+      publish:
+        - token-deposit-cpi
+        - capstone-ship-your-own
+      est_effort_hours: 9
+  per_lesson_effort:
+    - lesson: per-user-pda-vault
+      draft_words: 1400
+      research_hours: 1.5
+      write_hours: 2
+      review_hours: 1
+  freshness_policy:
+    onchain_numbers_restale_after_days: 30
+    applies_to:
+      - state-lives-in-accounts
+      - token-deposit-cpi

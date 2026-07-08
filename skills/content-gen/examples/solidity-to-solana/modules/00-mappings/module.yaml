@@ -1,0 +1,24 @@
+module:
+  id: module-mappings
+  title: "What maps 1:1 from Solidity — and what doesn't?"
+  driving_question: "Which of my EVM instincts transfer, and which will bite me?"
+  outcome:
+    bloom: implement
+    statement: "build and deploy a hello-world program and map its parts to EVM equivalents"
+  traces_to:
+    - to-deploy-vault
+  artifact: "toolchain + deployed hello"
+  artifact_rung: 0
+  depends_on: []
+  requires_skills: []
+  teaches_skills:
+    - solana-basics
+  patterns:
+    - map-from-known
+    - completion-loop
+  difficulty_band: 1
+  lessons:
+    - hello-and-toolchain
+  retrieval_checkpoint: "List three things that map 1:1 from Solidity and two that do not."
+  lesson_files:
+    hello-and-toolchain: "../../lessons/briefs/m00-l1-hello-and-toolchain.brief.yaml"

@@ -1,0 +1,10 @@
+# Frozen corpus-signature blocklist — artifacts/phrases owned by studied courses
+# (courses-corpus/*/META.md). Any hit in a brief or draft is a HARD failure:
+# learn the move, never reuse the artifact or shell phrase. Keep entries
+# multi-word and distinctive; matching is case-insensitive substring.
+# Owner: update only alongside a corpus re-study.
+movie review
+student intro
+restaurant review
+completed the lab?
+60 days of solana

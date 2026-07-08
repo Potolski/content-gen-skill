@@ -1,0 +1,30 @@
+lesson:
+  id: per-user-pda-vault
+  title: "Per-user state with a PDA (the mapping you don't have)"
+  objectives:
+    - bloom: explain
+      statement: "explain why Solana has no mappings and how PDAs replace them"
+    - bloom: implement
+      statement: "derive a canonical PDA seeded by the user and store per-user state under it"
+  prerequisites:
+    - state-lives-in-accounts
+    - account-model
+  hook: "In Solidity you'd write mapping(address => Vault). Solana has no mappings. So how does each user get their own vault?"
+  concept_spec: "PDAs: program-owned, deterministically-derived accounts (seeds + canonical bump). Build it twice — native find_program_address, then the Anchor seeds/bump constraint — so the abstraction is visible. One new element: the PDA derivation."
+  artifact_spec: "Upgrade the counter into a per-user vault PDA, seeded by the user's pubkey, with initialize and a balance."
+  exercise_spec: "Completion: fill in the seeds array (TODO). Solo: add a second PDA keyed by a label. Accept: two users get distinct, recoverable vaults; a reinit attempt fails."
+  the_tradeoff: "PDAs are deterministic and need no stored key, BUT you must store or recompute the canonical bump, and a sloppy seed scheme is an exploit (collision / spoofing)."
+  just_in_time:
+    define:
+      - program-derived-address
+      - canonical-bump
+      - seeds
+    footguns:
+      - "using a non-canonical bump"
+      - "user-controlled seeds without validation"
+  assessment: "anchor test: two users get distinct vaults; reinit attempt fails"
+  difficulty: 2
+  fading: completion
+  dominant_job: derive-why
+  voice_notes: "build-it-twice guest: show native then Anchor; the 'mapping you don't have' framing is the seam."
+  est_length: "1400 words / ~14 min"

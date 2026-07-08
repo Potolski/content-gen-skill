@@ -1,0 +1,26 @@
+module:
+  id: module-pdas
+  title: "Solidity had mappings; Solana doesn't. Now what?"
+  driving_question: "How do I give every user their own slot without a mapping?"
+  outcome:
+    bloom: implement
+    statement: "derive a canonical PDA and store per-user state under it"
+  traces_to:
+    - to-deploy-vault
+  artifact: "per-user PDA vault"
+  artifact_rung: 3
+  depends_on:
+    - module-state
+  requires_skills:
+    - account-model
+  teaches_skills:
+    - pdas
+  patterns:
+    - challenge-ladder
+    - build-it-twice
+  difficulty_band: 2
+  lessons:
+    - per-user-pda-vault
+  retrieval_checkpoint: "Re-derive a PDA for an unseen seed scheme and say why the bump is stored."
+  lesson_files:
+    per-user-pda-vault: "../../lessons/briefs/m03-l1-per-user-pda-vault.brief.yaml"

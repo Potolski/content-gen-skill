@@ -1,0 +1,26 @@
+lesson:
+  id: hello-and-toolchain
+  title: "Your Solidity instincts, mapped onto Solana"
+  objectives:
+    - bloom: implement
+      statement: "build and deploy a hello-world program and name its EVM equivalents"
+  prerequisites: []
+  hook: "You can read Solidity in your sleep. Most of that intuition transfers to Solana — until it suddenly, expensively doesn't. Let's get a program deployed and find the seams."
+  concept_spec: "The 1:1 map: program≈deployed contract, instruction≈function, signer≈msg.sender, compute≈gas. Worked example: deploy hello-world and read the log. One new element: the build/deploy/invoke loop."
+  artifact_spec: "Build and deploy hello-world to a local validator; invoke it; see the greeting in the logs."
+  exercise_spec: "Completion: change the logged message (TODO) and redeploy. Solo: add a second instruction. Accept: both messages appear in the logs."
+  the_tradeoff: "Leading with EVM mappings gets you productive fast, BUT a few of those mappings are traps — the account model (next modules) is where the analogy breaks."
+  just_in_time:
+    define:
+      - program
+      - instruction
+      - signer
+    footguns:
+      - "assuming a contract holds its own state"
+      - "wrong cluster in the CLI"
+  assessment: "deploy hello-world and show a changed log line"
+  difficulty: 1
+  fading: worked
+  dominant_job: motivate
+  voice_notes: "course opener; spine carries it; the 'until it expensively doesn't' line is the hook."
+  est_length: "1000 words / ~10 min"

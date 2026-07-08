@@ -1,0 +1,195 @@
+# The Handoff Contract — course spec & lesson-brief schema
+
+This is the **interface between `content-gen` and `writer-style`.** The architect emits
+these artifacts; the voice skill consumes the lesson briefs and writes the prose. Every field exists either
+to constrain the structure or to feed the writer — nothing decorative.
+
+The golden rule: **the brief specifies *what* is taught, in *what order*, and proven *how* — never *how it
+sounds*.** Leave the prose, jokes, analogies, and rhythm to the voice skill. An over-specified brief
+strangles the voice (see `design-spine.md` §10).
+
+**`id` convention:** all `id` fields (course/module/lesson) are kebab-case, outcome-led, unique within a
+course, and **stable across the handoff** — the voice skill references lessons by these ids. `depends_on`
+and `prerequisites` are id edges, so a typo'd edge is caught as a HARD failure by `tools/validate_course.py dag`
+(`references/quality-bar.md`, validation-procedure step 1); keep them canonical.
+
+---
+
+## A. Course Spec (one per course)
+
+```yaml
+course:
+  title:                 # outcome-led, not topic-led ("Ship Your First Solana Program", not "Intro to Solana")
+  one_line_promise:      # "By the end you can build, test, and deploy X"
+  audience:
+    who:                 # absolute-beginner | web2-dev | evm-dev | solana-dev-leveling-up | non-technical
+    prior_model:         # what they already know that we map from/against
+    prerequisites:       # hard prereqs (e.g. "comfortable with TypeScript"); keep minimal
+  terminal_outcomes:     # the measurable, Bloom-tagged capabilities the whole course proves
+    - {bloom: create, statement: "build, test and deploy a PDA-backed SPL-token vault with correct auth checks"}
+  format:                # self-paced | cohort | workshop | docs-path
+  length_target:         # hours / lessons / weeks (be honest; prefer tight over exhaustive)
+  credential:            # none | self-assessment | auto-graded | on-chain-NFT | certificate
+  backbone_pattern:      # ordered phases of the ONE backbone track (opener -> engine); guests never appear here
+  lesson_template:       # the default lesson pattern (usually overview-lab-challenge)
+  capstone:              # the terminal artifact + how it's assessed
+  prerequisite_dag:      # ordered skill nodes (see solana-syllabus-dag.md); the spine of the sequence
+  modules:               # ordered list of module ids -> see Module Spec
+```
+
+## B. Module Spec (one per module)
+
+```yaml
+module:
+  id:
+  title:                 # driving-question or artifact framed
+  driving_question:      # "how do we let users stake SOL trustlessly?"
+  outcome:               # Bloom-tagged module outcome (subset of terminal outcomes)
+  artifact:              # the build this module produces (a rung on the artifact ladder)
+  depends_on:            # module/skill ids that must precede it (DAG edge)
+  patterns:              # the pattern(s) leaned on here (backbone + ≤1-2 guests)
+  difficulty_band:       # 1-3; should ramp across the course (fading)
+  lessons:               # ordered list of lesson ids -> see Lesson Brief
+  retrieval_checkpoint:  # the spaced-retrieval / interleaving check that closes the module
+```
+
+## C. Lesson Brief (one per lesson) — THE handoff unit
+
+```yaml
+lesson:
+  id:
+  title:                 # outcome-led ("Store per-user state with a PDA")
+  kind:                  # build (default) | concept — concept lessons drop artifact_spec/exercise_spec/fading
+  objectives:            # measurable, Bloom-tagged; 1-3 max
+    - {bloom: implement, statement: "derive a canonical PDA and write per-user account data"}
+  prerequisites:         # lesson/skill ids (must already be taught — DAG check)
+  hook:                  # the FELT problem / exploit / demo that opens it  → feeds voice pain-first opener
+  concept_spec:          # the idea(s) to teach + the worked example to build (one new element per pass)
+  artifact_spec:         # exactly what the learner builds this lesson (the ladder rung / accretion)
+  artifact:              # OPTIONAL structured accretion edge: {id, consumes: [earlier artifact ids], terminal: <reason>}
+  verify:                # RECOMMENDED for build lessons: {command, expect} — the one-line paste-and-see proof (CI smoke tier)
+  exercise_spec:         # the completion problem + the unguided challenge + acceptance criteria
+  the_tradeoff:          # the cost / limit / "when not to use it"  → feeds voice always-name-the-tradeoff
+  just_in_time:
+    define:              # concepts to define at point of use (don't front-load)
+    footguns:            # the specific traps to flag inline (NOTE/TIP/IMPORTANT)
+  assessment:            # how mastery is proven (gate on doing); string or {gate, answer_shape} — answer_shape keeps the from-memory close a 30-second win
+  difficulty: 1          # 1-3
+  fading:                # where this sits on the worked→completion→solo schedule
+  dominant_job:          # show-how | derive-why | demystify | economics | frame | sustain | motivate  ← VOICE ROUTER INPUT
+  voice_notes:           # optional voice hints: guest craft, an audience-stakes angle, a real number to cite
+  flow:                  # the narrative thread (REQUIRED for course lessons — quality-bar JUDGE row)
+    recap:               # one line: where the course stands as this opens (call back the previous artifact)
+    forward_hook:        # the cliffhanger/promise that closes the lesson and opens the next
+  color:                 # 1-3 grounded trivia/history beats to weave in (named incidents, dated numbers) — never invented
+  est_length:            # THE length contract — the writer writes to this number. Course lessons: ~3000-4500w (keystone topics higher). Validator flags targets below 3000.
+```
+
+---
+
+## D. `dominant_job` → voice-skill routing (the critical integration)
+
+The craft names below mirror the writer-style release and may evolve there; the binding
+contract is the `dominant_job` enum, resolved against the **installed** writer-style at
+runtime. The architect classifies each lesson's **dominant job** and writes it into the brief. The voice skill's
+router (the `writer-style` skill's own `routing/ROUTING.md` — locate via that skill's install; never a
+hardcoded relative path) consumes it directly — so the architecture decides
+the routing, and the writer never has to guess.
+
+| Lesson's dominant job | `dominant_job` | Voice craft the brief should trigger |
+|---|---|---|
+| Show how a documented thing works, step-by-step (most labs/tutorials) | `show-how` | **Helius** (expository backbone) |
+| Derive *why* a contested/intricate design is right | `derive-why` | **Vitalik** |
+| Demystify one hyped/misframed thing by collapsing it ("X is just Y") | `demystify` | **Hotz** — *as a single-position guest over a Helius/spine backbone, never a whole-lesson Hotz backbone; extra-careful on security* |
+| Make economics / tokenomics / value-flows legible | `economics` | **Hayes** (*if the lesson is also a mechanism derivation, tag `derive-why` instead → Vitalik backbone + Hayes guest; derivation wins*) |
+| Frame a broad/contestable thesis or the ecosystem up front | `frame` | **Balaji** — *opener-guest only, never a whole-lesson backbone* |
+| Sustain a long / cold-audience / intimidating lesson (abandonment risk) | `sustain` | **Hayes** (engagement & stamina) |
+| Motivation / "why this matters" / course-opener | `motivate` | **Kaue's spine carries it** (no craft backbone) |
+| Diagnose/fix a documented failure (debugging, security walkthrough) | `show-how` (+note) | **Helius**, guest Vitalik/Hotz per the voice router |
+
+Rules of thumb the architect should honor so the handoff is clean:
+- **Openers and "why it matters" beats → `motivate`** (spine-only; don't over-craft).
+- **Security exploit-then-patch lessons → `show-how`** with a `voice_notes` flag "security: be wary of Hotz
+  reductive collapse" (mirrors the voice router's security caution).
+- **A lesson whose real job is *derivation* is `derive-why`, even if it's technical** (don't default every
+  technical lesson to `show-how`).
+- **`frame` and `demystify` are guest jobs, never backbones** — the voice skill uses Balaji and Hotz only
+  as single-position guests. Tag them only when that guest move genuinely *leads* the lesson; the writer
+  carries the body in Helius/Vitalik/spine.
+- **`sustain` ≠ `economics`** — use `sustain` for long, non-economic, cold-audience lessons at abandonment
+  risk (Hayes's engagement craft); use `economics` only for real value-flow/tokenomics content.
+- **One dominant job per lesson.** If a lesson is genuinely two jobs, that's a signal to split it.
+
+---
+
+## E. Minimal worked example (one filled lesson brief)
+
+```yaml
+lesson:
+  id: pdas-per-user-state
+  title: "Store per-user state with a PDA"
+  objectives:
+    - {bloom: explain, statement: "explain why Solana has no mappings and how PDAs replace them"}
+    - {bloom: implement, statement: "derive a canonical PDA and write per-user account data"}
+  prerequisites: [accounts-and-rent, your-first-program, the-counter]
+  hook: "In Solidity you'd reach for mapping(address => Data). Solana has no mappings. So where does per-user data live?"
+  concept_spec: "PDAs as program-owned, deterministically-derived accounts; find_program_address; canonical bump. Build by extending the running counter to one account PER user."
+  artifact_spec: "Upgrade the counter program so each user gets their own counter PDA, seeded by their pubkey."
+  exercise_spec: "Completion: fill in the seeds array (TODO). Solo: add a second PDA keyed by a string label. Accept: two users get distinct, recoverable accounts; test passes."
+  the_tradeoff: "Deterministic + no key to manage, BUT you must store or recompute the bump, and a sloppy seed scheme is an exploit (collision / spoofing)."
+  just_in_time:
+    define: [program-derived-address, canonical-bump, seeds]
+    footguns: ["using a non-canonical bump", "user-controlled seeds without validation"]
+  assessment: "anchor test: two distinct users write and read back their own counter; reinit attempt fails."
+  difficulty: 2
+  fading: "worked derivation shown; completion problem for seeds; solo for the second PDA"
+  dominant_job: derive-why
+  voice_notes: "contested 'why no mappings' — Vitalik craft over spine; a real devnet number for account size/rent is a good seam."
+  est_length: "1200 words / ~12 min"
+```
+
+This brief is **voice-ready**: it hands the writer a felt hook, a named trade-off, a concrete artifact with
+real numbers, and a `dominant_job` that routes the craft — and stops there, leaving the prose to Kaue.
+
+---
+
+## F. Content Brief — the non-course forms (tutorial, walkthrough, explainer, essay, litepaper, slides, post)
+
+The same seam, one unit instead of a filesystem. Core keys are shared with §C; each form adds its own
+(defined in `forms/<form>.md`). A `post` fills this inline and skips the file.
+
+```yaml
+content:
+  id:                    # kebab-case slug; also the content/<form-plural>/<slug>/ dir name
+  form:                  # tutorial | walkthrough | explainer | essay | litepaper | slides | post
+  title:                 # outcome-led
+  audience: {who:, prior_model:}
+  objective:             # ONE measurable, Bloom-tagged statement
+    {bloom:, statement:}
+  hook:                  # the felt problem that opens it
+  concept_spec:          # the idea(s) taught + the concrete example that carries them
+  the_tradeoff:          # the cost / limit / "when not to use it"
+  dominant_job:          # same enum + routing as §D
+  est_length:            # words / slides / thread units
+  visuals: light         # none | light | rich (see references/visual-placeholders.md)
+  deliverable: full-text # full-text (default) | brief-only
+  frozen_facts: []       # grounded claims the text must carry verbatim
+  # + the form's extra keys — see forms/<form>.md
+```
+
+Emitted alongside the piece as `content/<form-plural>/<slug>/brief.yaml` (threads: `content/threads/<slug>/`; except unsaved posts). The §D
+`dominant_job` routing applies unchanged — this is what keeps a tutorial, an essay, and a
+course lesson consistent when they pass through the same voice.
+
+
+## G. Fact & recap discipline (hardening)
+
+- **`frozen_facts` are ATOMIC.** One verbatim value per line — a version, id, number, port,
+  or a single exact command — each appearing verbatim once in the prose. NEVER a
+  multi-clause sentence, a multi-version mention, or a templated command with placeholders
+  (`<program_name>`, generic `MyType`): the writer-style facts diff checks every extracted
+  token and a templated/multi-value fact false-fails. Keep the rich prose in the draft;
+  keep the checkable atoms in `frozen_facts`.
+- **`flow.recap` is honest.** It calls back only what the previous lesson genuinely did or
+  built. A recap that invents a prior experience breaks the spine; the writer must open on
+  the real previous artifact/step.

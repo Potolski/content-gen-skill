@@ -1,0 +1,107 @@
+schema_version: 1
+course:
+  id: solana-for-solidity-devs
+  title: "Solana for Solidity Devs: Ship Four Programs"
+  one_line_promise: "By the end you can build, test, and deploy a PDA-backed SPL-token vault on Solana devnet, and explain exactly how the account model differs from EVM storage."
+  version: 0.1.0
+  status: draft
+  created: 2026-06-27
+  audience:
+    who: evm-dev
+    prior_model: "Strong Solidity/EVM model: contracts, storage variables, mappings, gas, revert."
+    prerequisites:
+      - "comfortable with TypeScript"
+      - "has shipped at least one Solidity contract"
+  terminal_outcomes:
+    - id: to-deploy-vault
+      bloom: create
+      statement: "build, test, and deploy a PDA-backed SPL-token vault on devnet with correct signer/owner checks"
+    - id: to-explain-accounts
+      bloom: explain
+      statement: "explain how Solana's account model differs from EVM storage"
+  format: self-paced
+  length_target:
+    hours: 6
+    lessons: 6
+    weeks: 3
+  credential: on-chain-NFT
+  routing:
+    backbone_pattern:
+      - map-from-known
+      - challenge-ladder
+    lesson_template: overview-lab-challenge
+    guest_patterns:
+      - build-it-twice
+    security: inline-footguns
+  artifact_ladder:
+    - hello-world
+    - counter
+    - pda-app
+    - cpi-composition
+    - capstone
+dag:
+  nodes:
+    - solana-basics
+    - compute-and-errors
+    - account-model
+    - pdas
+    - cpis
+    - spl-tokens
+  edges:
+    -
+      - solana-basics
+      - compute-and-errors
+    -
+      - solana-basics
+      - account-model
+    -
+      - account-model
+      - pdas
+    -
+      - pdas
+      - cpis
+    -
+      - cpis
+      - spl-tokens
+glossary:
+  - term: account
+    def: "The unit of state on Solana; programs are stateless and read/write accounts passed in (the analog of EVM storage, but external)."
+    first_taught: state-lives-in-accounts
+  - term: program-derived-address
+    def: "A deterministic program-owned address from seeds + a canonical bump; replaces Solidity mappings for per-key state."
+    first_taught: per-user-pda-vault
+  - term: cross-program-invocation
+    def: "One program calling another (e.g. the Token Program); the EVM analog of an external contract call."
+    first_taught: token-deposit-cpi
+concept_ledger:
+  - concept: solana-basics
+    introduced_in: hello-and-toolchain
+  - concept: compute-and-errors
+    introduced_in: compute-and-errors
+  - concept: account-model
+    introduced_in: state-lives-in-accounts
+  - concept: pdas
+    introduced_in: per-user-pda-vault
+  - concept: cpis
+    introduced_in: token-deposit-cpi
+  - concept: spl-tokens
+    introduced_in: token-deposit-cpi
+references:
+  cadence: cadence.yaml
+  assessment: assessment.yaml
+  state: "_state.yaml"
+  manifest: manifest.json
+modules:
+  - module-mappings
+  - module-gas-and-revert
+  - module-state
+  - module-pdas
+  - module-cpi-tokens
+  - module-capstone
+lessons:
+  - hello-and-toolchain
+  - compute-and-errors
+  - state-lives-in-accounts
+  - per-user-pda-vault
+  - token-deposit-cpi
+  - capstone-ship-your-own

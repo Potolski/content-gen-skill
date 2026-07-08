@@ -1,0 +1,459 @@
+{
+  "schema_version": 1,
+  "course": {
+    "id": "solana-pda-counter-for-web2-devs",
+    "title": "Ship a Per-User Counter on Solana",
+    "one_line_promise": "By the end you can build, test, and deploy a per-user PDA counter program to Solana devnet — even if you've never touched a blockchain.",
+    "version": "0.1.0",
+    "status": "draft",
+    "created": "2026-06-27",
+    "audience": {
+      "who": "web2-dev",
+      "prior_model": "Backend web2: functions, a database, REST handlers. No blockchain.",
+      "prerequisites": [
+        "comfortable with the command line",
+        "some TypeScript or Rust exposure helps"
+      ]
+    },
+    "terminal_outcomes": [
+      {
+        "id": "to-pda-counter",
+        "bloom": "create",
+        "statement": "build, test, and deploy a per-user PDA counter program to Solana devnet"
+      }
+    ],
+    "format": "self-paced",
+    "length_target": {
+      "hours": 2,
+      "lessons": 3,
+      "weeks": 1
+    },
+    "credential": "none",
+    "routing": {
+      "backbone_pattern": [
+        "concept-spine",
+        "challenge-ladder"
+      ],
+      "lesson_template": "overview-lab-challenge",
+      "guest_patterns": [],
+      "security": "inline-footguns"
+    },
+    "artifact_ladder": [
+      "hello-world",
+      "counter",
+      "pda-app"
+    ]
+  },
+  "dag": {
+    "nodes": [
+      "account-model",
+      "programs-instructions",
+      "pdas"
+    ],
+    "edges": [
+      [
+        "account-model",
+        "programs-instructions"
+      ],
+      [
+        "programs-instructions",
+        "pdas"
+      ],
+      [
+        "account-model",
+        "pdas"
+      ]
+    ]
+  },
+  "glossary": [
+    {
+      "term": "account",
+      "def": "The unit of state on Solana; programs are stateless and read/write accounts passed to them.",
+      "first_taught": "the-counter"
+    },
+    {
+      "term": "program-derived-address",
+      "def": "A deterministic address owned by a program, derived from seeds + a canonical bump.",
+      "first_taught": "pda-per-user"
+    }
+  ],
+  "concept_ledger": [
+    {
+      "concept": "account-model",
+      "introduced_in": "the-counter"
+    },
+    {
+      "concept": "programs-instructions",
+      "introduced_in": "the-counter"
+    },
+    {
+      "concept": "pdas",
+      "introduced_in": "pda-per-user"
+    }
+  ],
+  "modules": [
+    {
+      "id": "module-first-program",
+      "title": "Your first program: state lives in accounts",
+      "driving_question": "Where does my data live if a program is just a stateless function?",
+      "outcome": {
+        "bloom": "implement",
+        "statement": "write and read a counter stored in an account"
+      },
+      "traces_to": [
+        "to-pda-counter"
+      ],
+      "artifact": "a single-counter program",
+      "artifact_rung": 1,
+      "depends_on": [],
+      "requires_skills": [],
+      "teaches_skills": [
+        "account-model",
+        "programs-instructions"
+      ],
+      "patterns": [
+        "concept-spine",
+        "challenge-ladder"
+      ],
+      "difficulty_band": 1,
+      "lessons": [
+        "hello-and-toolchain",
+        "the-counter"
+      ],
+      "retrieval_checkpoint": "Explain, without notes, why a Solana program can't just store a variable the way a web2 service holds memory."
+    },
+    {
+      "id": "module-pdas",
+      "title": "One counter per user, with PDAs",
+      "driving_question": "How do I give every user their own counter without a mapping?",
+      "outcome": {
+        "bloom": "implement",
+        "statement": "derive a canonical PDA and store per-user state under it"
+      },
+      "traces_to": [
+        "to-pda-counter"
+      ],
+      "artifact": "a per-user PDA counter",
+      "artifact_rung": 3,
+      "depends_on": [
+        "module-first-program"
+      ],
+      "requires_skills": [
+        "account-model",
+        "programs-instructions"
+      ],
+      "teaches_skills": [
+        "pdas"
+      ],
+      "patterns": [
+        "challenge-ladder"
+      ],
+      "difficulty_band": 2,
+      "lessons": [
+        "pda-per-user"
+      ],
+      "retrieval_checkpoint": "Re-derive a PDA for a brand-new seed scheme from memory and say why the bump must be stored."
+    }
+  ],
+  "lessons": [
+    {
+      "id": "hello-and-toolchain",
+      "module": "module-first-program",
+      "order": 1,
+      "brief": {
+        "id": "hello-and-toolchain",
+        "title": "Get a program on-chain in ten minutes",
+        "objectives": [
+          {
+            "bloom": "implement",
+            "statement": "deploy a hello-world program to a local validator and read its log"
+          }
+        ],
+        "prerequisites": [],
+        "hook": "You've shipped web2 services for years. Today you'll put real code on a public computer that no one — not even you — can quietly change. That shift is the whole game.",
+        "concept_spec": "What a Solana program is (a stateless, deployed function) and the dev loop: build, deploy, invoke, read logs. Worked example: the default hello-world.",
+        "artifact_spec": "Build and deploy the hello-world program to a local validator; invoke it; see the greeting in the logs.",
+        "exercise_spec": "Completion: change the logged message and redeploy. Solo: add a second log line. Accept: the new message shows in the validator logs.",
+        "the_tradeoff": "A local validator is instant and free but throws away state on restart — great for the loop, useless as a record. We move to devnet once the program is real.",
+        "just_in_time": {
+          "define": [
+            "program",
+            "validator",
+            "log"
+          ],
+          "footguns": [
+            "forgetting to rebuild before redeploy",
+            "pointing the CLI at the wrong cluster"
+          ]
+        },
+        "assessment": "deploy hello-world locally and show the changed log line",
+        "difficulty": 1,
+        "fading": "worked",
+        "dominant_job": "motivate",
+        "voice_notes": "course opener; spine carries it; the felt 'no one can change it' shift is the hook.",
+        "est_length": "900 words / ~9 min"
+      }
+    },
+    {
+      "id": "the-counter",
+      "module": "module-first-program",
+      "order": 2,
+      "brief": {
+        "id": "the-counter",
+        "title": "Store a number that survives",
+        "objectives": [
+          {
+            "bloom": "explain",
+            "statement": "explain why programs are stateless and state lives in accounts"
+          },
+          {
+            "bloom": "implement",
+            "statement": "write and read a counter held in an account"
+          }
+        ],
+        "prerequisites": [
+          "hello-and-toolchain"
+        ],
+        "hook": "In web2 you'd just bump a row in a database. Your program has no database — and no memory between calls. So where does the count go?",
+        "concept_spec": "The account model: programs are stateless; state lives in accounts you pass in. Worked example: an account holding a single u64 count, with initialize and increment.",
+        "artifact_spec": "A program with initialize (creates the counter account) and increment (adds one), with a test proving the value persists across calls.",
+        "exercise_spec": "Completion: fill in the increment handler (TODO). Solo: add a decrement that can't go below zero. Accept: anchor test shows the count persisting and the floor enforced.",
+        "the_tradeoff": "Putting state in a separate account is flexible and rent-cheap, BUT you pay rent to keep it alive and must pass the right account in every call — there's no implicit 'this.count'.",
+        "just_in_time": {
+          "define": [
+            "account",
+            "rent",
+            "instruction"
+          ],
+          "footguns": [
+            "unchecked add overflowing",
+            "not making the account a signer/payer on init"
+          ]
+        },
+        "assessment": "anchor test: increment persists across two separate calls",
+        "difficulty": 1,
+        "fading": "worked",
+        "dominant_job": "show-how",
+        "voice_notes": "expository backbone; the 'no this.count' line is the aha.",
+        "est_length": "1200 words / ~12 min"
+      }
+    },
+    {
+      "id": "pda-per-user",
+      "module": "module-pdas",
+      "order": 1,
+      "brief": {
+        "id": "pda-per-user",
+        "title": "Give every user their own counter",
+        "objectives": [
+          {
+            "bloom": "explain",
+            "statement": "explain why Solana has no mappings and how PDAs replace them"
+          },
+          {
+            "bloom": "implement",
+            "statement": "derive a canonical PDA seeded by the user and store per-user state under it"
+          }
+        ],
+        "prerequisites": [
+          "the-counter",
+          "account-model"
+        ],
+        "hook": "One global counter is a toy. Real apps need one per user. In web2 that's a keyed row; on Solana there are no mappings. So how does each user get their own slot?",
+        "concept_spec": "PDAs: program-owned addresses derived deterministically from seeds + a canonical bump via find_program_address. Worked example: seed the counter account by the user's pubkey.",
+        "artifact_spec": "Upgrade the counter so each user gets their own counter PDA, seeded by their pubkey; initialize-if-missing and increment.",
+        "exercise_spec": "Completion: fill in the seeds array (TODO). Solo: add a second PDA keyed by a string label. Accept: two distinct users get distinct, recoverable counters; a reinit attempt fails.",
+        "the_tradeoff": "PDAs are deterministic and need no stored key, BUT you must store or recompute the canonical bump, and a sloppy seed scheme is an exploit (collision or spoofing).",
+        "just_in_time": {
+          "define": [
+            "program-derived-address",
+            "canonical-bump",
+            "seeds"
+          ],
+          "footguns": [
+            "using a non-canonical bump",
+            "user-controlled seeds without validation"
+          ]
+        },
+        "assessment": "test: two users write and read back their own counter; reinit attempt fails",
+        "difficulty": 2,
+        "fading": "completion",
+        "dominant_job": "derive-why",
+        "voice_notes": "contested 'why no mappings' — derivation leads (Vitalik craft over spine); cite the grounded rent number once verified.",
+        "est_length": "1400 words / ~14 min"
+      },
+      "research": {
+        "lesson_id": "pda-per-user",
+        "status": "gathering",
+        "source_priority": [
+          "solana-dev",
+          "context7",
+          "helius"
+        ],
+        "claims": [
+          {
+            "id": "C1",
+            "claim": "Solana has no native mapping type; per-user state uses separate (PDA) accounts.",
+            "kind": "concept",
+            "mcp": "solana-dev",
+            "query": "Solana account model vs mappings; PDA per-user state",
+            "verify": "core docs: programs stateless, state in accounts",
+            "status": "verified",
+            "evidence": "solana-dev: Accounts / PDA docs",
+            "value": null
+          },
+          {
+            "id": "C2",
+            "claim": "PDAs derive via find_program_address(seeds, program_id) returning an address and a canonical bump.",
+            "kind": "api",
+            "mcp": "solana-dev",
+            "query": "find_program_address canonical bump",
+            "verify": "API name + canonical-bump semantics current",
+            "status": "verified",
+            "evidence": "solana-dev: PDA section",
+            "value": null
+          },
+          {
+            "id": "F3",
+            "claim": "Rent-exempt minimum for the per-user counter account on devnet, in SOL.",
+            "kind": "onchain-number",
+            "mcp": "helius",
+            "query": "getMinimumBalanceForRentExemption for a ~17-byte account",
+            "verify": "pull live devnet figure; record exact value + date",
+            "status": "gathering",
+            "evidence": "TODO: helius getMinimumBalanceForRentExemption",
+            "value": null
+          }
+        ],
+        "code_to_ground": [
+          {
+            "id": "K1",
+            "what": "seeds array for the per-user PDA",
+            "autofixer": "required",
+            "status": "gathering"
+          }
+        ],
+        "open_questions": [
+          "Show init_if_needed here, or defer the reinit footgun to its own beat?"
+        ],
+        "frozen_facts": [
+          "Solana has no native mappings; per-user data lives in separate PDA accounts.",
+          "PDA derivation: find_program_address(seeds, program_id) -> (address, canonical_bump).",
+          "Store the canonical bump; recomputing it every call wastes compute and only the canonical bump is safe."
+        ]
+      }
+    }
+  ],
+  "cadence": {
+    "pedagogy": {
+      "fading_schedule": [
+        {
+          "lesson": "hello-and-toolchain",
+          "mode": "worked",
+          "difficulty": 1
+        },
+        {
+          "lesson": "the-counter",
+          "mode": "worked",
+          "difficulty": 1
+        },
+        {
+          "lesson": "pda-per-user",
+          "mode": "completion",
+          "difficulty": 2
+        }
+      ],
+      "difficulty_curve": [
+        1,
+        1,
+        2
+      ],
+      "worked_examples_removed_after": "module-first-program",
+      "spiral": [
+        {
+          "skill": "account-model",
+          "reappears_in": [
+            "pda-per-user"
+          ]
+        }
+      ],
+      "retrieval_checkpoints": [
+        "checkpoint-accounts"
+      ],
+      "cumulative_checkpoint_before": "capstone-pda-counter"
+    },
+    "release": {
+      "mode": "all-at-once",
+      "start_date": "2026-07-06",
+      "timezone": "America/Sao_Paulo",
+      "schedule": [
+        {
+          "week": 1,
+          "publish": [
+            "hello-and-toolchain",
+            "the-counter",
+            "pda-per-user"
+          ],
+          "est_effort_hours": 8
+        }
+      ],
+      "per_lesson_effort": [
+        {
+          "lesson": "pda-per-user",
+          "draft_words": 1400,
+          "research_hours": 1.5,
+          "write_hours": 2,
+          "review_hours": 1
+        }
+      ],
+      "freshness_policy": {
+        "onchain_numbers_restale_after_days": 30,
+        "applies_to": [
+          "pda-per-user"
+        ]
+      }
+    }
+  },
+  "assessment": {
+    "model": "capstone",
+    "gate_principle": "Completion is gated on a deployed, tested program — never on watching.",
+    "proof_matrix": [
+      {
+        "outcome": "to-pda-counter",
+        "proven_by": "capstone-pda-counter",
+        "evidence": "deployed devnet program id + passing test suite"
+      }
+    ],
+    "checkpoints": [
+      {
+        "id": "checkpoint-accounts",
+        "after_module": "module-first-program",
+        "type": "explain-back",
+        "spec": "Explain where state lives and why programs are stateless; name one trade-off."
+      }
+    ],
+    "cumulative_checkpoint": {
+      "after_module": "module-pdas",
+      "spec": "Per-user PDA counter with a reinit guard, reusing the account validation from the single counter."
+    },
+    "capstone": {
+      "id": "capstone-pda-counter",
+      "statement": "Deploy a per-user PDA counter to devnet with passing tests.",
+      "requires_skills": [
+        "account-model",
+        "programs-instructions",
+        "pdas"
+      ],
+      "rubric": [
+        "uses a PDA seeded by the user",
+        "stores the canonical bump",
+        "increment uses checked arithmetic",
+        "tests pass; deploys to devnet"
+      ],
+      "credential": "none",
+      "traces_to": [
+        "to-pda-counter"
+      ]
+    }
+  }
+}

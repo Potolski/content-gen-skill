@@ -1,0 +1,26 @@
+module:
+  id: module-pdas
+  title: "One counter per user, with PDAs"
+  driving_question: "How do I give every user their own counter without a mapping?"
+  outcome:
+    bloom: implement
+    statement: "derive a canonical PDA and store per-user state under it"
+  traces_to:
+    - to-pda-counter
+  artifact: "a per-user PDA counter"
+  artifact_rung: 3
+  depends_on:
+    - module-first-program
+  requires_skills:
+    - account-model
+    - programs-instructions
+  teaches_skills:
+    - pdas
+  patterns:
+    - challenge-ladder
+  difficulty_band: 2
+  lessons:
+    - pda-per-user
+  retrieval_checkpoint: "Re-derive a PDA for a brand-new seed scheme from memory and say why the bump must be stored."
+  lesson_files:
+    pda-per-user: "../../lessons/briefs/m01-l1-pda-per-user.brief.yaml"

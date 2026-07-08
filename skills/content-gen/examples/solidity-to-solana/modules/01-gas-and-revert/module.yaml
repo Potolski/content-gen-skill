@@ -1,0 +1,25 @@
+module:
+  id: module-gas-and-revert
+  title: "Where did gas and revert go?"
+  driving_question: "What replaced gas metering and require/revert?"
+  outcome:
+    bloom: implement
+    statement: "set a compute budget and return a custom program error"
+  traces_to:
+    - to-deploy-vault
+  artifact: "compute budget + custom errors"
+  artifact_rung: 0
+  depends_on:
+    - module-mappings
+  requires_skills:
+    - solana-basics
+  teaches_skills:
+    - compute-and-errors
+  patterns:
+    - map-from-known
+  difficulty_band: 1
+  lessons:
+    - compute-and-errors
+  retrieval_checkpoint: "Map gas→compute units and require()→custom error in your own words."
+  lesson_files:
+    compute-and-errors: "../../lessons/briefs/m01-l1-compute-and-errors.brief.yaml"

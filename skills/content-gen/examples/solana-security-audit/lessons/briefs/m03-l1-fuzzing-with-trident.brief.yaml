@@ -1,0 +1,28 @@
+lesson:
+  id: fuzzing-with-trident
+  title: "Find the bug you didn't think of: fuzzing"
+  objectives:
+    - bloom: implement
+      statement: "write a fuzz test that asserts a program invariant and catches a regression"
+  prerequisites:
+    - arithmetic-and-cpi-safety
+    - cpi-security
+  hook: "Your tests pass — but they only check the cases you imagined. Fuzzing throws millions of cases you didn't. Let's point one at your vault and see what it finds."
+  concept_spec: "Property/invariant fuzzing for Solana programs with Trident; expressing an invariant (e.g. total deposited never exceeds vault balance). One new element: the fuzz harness as a thread on top of the existing tests."
+  artifact_spec: "Add a Trident fuzz target asserting a balance invariant on the hardened vault; reintroduce a bug and watch the fuzzer catch it."
+  exercise_spec: "Completion: fill in the invariant assertion (TODO). Solo: add a second invariant. Accept: the fuzzer flags a deliberately reintroduced overflow."
+  the_tradeoff: "Fuzzing surfaces unknown-unknowns, BUT it costs setup and CI time and only checks the invariants you write — it complements, never replaces, targeted tests and review."
+  just_in_time:
+    define:
+      - fuzzing
+      - invariant
+      - property-test
+    footguns:
+      - "asserting no invariants (a fuzzer with nothing to check finds nothing)"
+      - "fuzzing only the happy path"
+  assessment: "the fuzz target catches a reintroduced bug; the clean program passes"
+  difficulty: 3
+  fading: completion
+  dominant_job: show-how
+  voice_notes: "testing-thread escalation; cite the Trident tool name as grounded in research."
+  est_length: "1300 words / ~13 min"

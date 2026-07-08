@@ -1,0 +1,27 @@
+module:
+  id: module-capstone
+  title: "Ship your own."
+  driving_question: "Can I design and ship a small program end-to-end?"
+  outcome:
+    bloom: create
+    statement: "design, test, and deploy an original PDA + SPL-token program"
+  traces_to:
+    - to-deploy-vault
+    - to-explain-accounts
+  artifact: "freeform capstone"
+  artifact_rung: 7
+  depends_on:
+    - module-cpi-tokens
+  requires_skills:
+    - pdas
+    - cpis
+    - spl-tokens
+  teaches_skills: []
+  patterns:
+    - challenge-ladder
+  difficulty_band: 3
+  lessons:
+    - capstone-ship-your-own
+  retrieval_checkpoint: "Defend your account layout and one trade-off you made."
+  lesson_files:
+    capstone-ship-your-own: "../../lessons/briefs/m05-l1-capstone-ship-your-own.brief.yaml"

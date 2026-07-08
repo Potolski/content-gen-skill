@@ -1,0 +1,29 @@
+lesson:
+  id: compute-and-errors
+  title: "Where gas and revert went"
+  objectives:
+    - bloom: explain
+      statement: "explain how compute units replace gas and how program errors replace revert"
+    - bloom: implement
+      statement: "set a compute budget and return a custom error"
+  prerequisites:
+    - hello-and-toolchain
+  hook: "In Solidity, gas and require() were always in your hands. On Solana they're still here — renamed, repriced, and with sharper edges. Where did they go?"
+  concept_spec: "Compute units ≈ gas (a per-transaction budget you can raise); custom program errors ≈ revert reasons. Worked example: add a compute-budget instruction and a custom error to hello-world. One new element: the compute budget."
+  artifact_spec: "Augment the program with a compute-budget request and an instruction that returns a custom error on bad input."
+  exercise_spec: "Completion: raise the compute unit limit (TODO). Solo: add a second error variant. Accept: the error surfaces by name in the test."
+  the_tradeoff: "A raisable compute budget is flexible, BUT every unit costs priority fee — and unlike gas, you set the limit up front, so under-budgeting fails the whole transaction."
+  just_in_time:
+    define:
+      - compute-unit
+      - compute-budget
+      - program-error
+    footguns:
+      - "under-budgeting compute"
+      - "swallowing errors instead of returning typed ones"
+  assessment: "anchor test: the custom error is returned on bad input; the tx fits the set budget"
+  difficulty: 1
+  fading: worked
+  dominant_job: derive-why
+  voice_notes: "map-from-known framing; derive WHY the budget is up-front, not metered as you go."
+  est_length: "1100 words / ~11 min"

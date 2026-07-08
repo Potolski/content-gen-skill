@@ -1,0 +1,84 @@
+{
+  "files": {
+    "course.yaml": {
+      "sha256": "c4598e0087ff36dce983b606dfcebeb40315f0351660f2afd41c2b9c1133e723",
+      "edited_by_human": false
+    },
+    "manifest.json": {
+      "sha256": "d0302c3777b8f1e22e01dcb8a41906072103403fdcf7d6147e91c55907aee061",
+      "edited_by_human": false
+    },
+    "modules/00-offense/module.yaml": {
+      "sha256": "5e82e63b52d6acb9478d20f11d4b20162d83dd998c6758bfbaeb60a427f9c7ea",
+      "edited_by_human": false
+    },
+    "modules/01-defense/module.yaml": {
+      "sha256": "ae8882946c69fe2a23d7a2b1b9b2b716b62087d3afaf9dab88adbdcb29e59944",
+      "edited_by_human": false
+    },
+    "modules/02-arith-cpi/module.yaml": {
+      "sha256": "09df654872bdd1b16789c1086778d6ada824c7d8f25e81fe66354131c4f808c7",
+      "edited_by_human": false
+    },
+    "modules/03-fuzz-and-audit/module.yaml": {
+      "sha256": "17061b11b3ed77ca2083887a5f62d3137bbd904bb2ae90ee21275056e35a6ae3",
+      "edited_by_human": false
+    },
+    "lessons/briefs/m00-l1-the-exploit-mindset.brief.yaml": {
+      "sha256": "2a0b056bd16cdf9709908befae50b6c14c62013864b437e6c9022acf686cb785",
+      "edited_by_human": false
+    },
+    "lessons/briefs/m01-l1-signer-and-owner-checks.brief.yaml": {
+      "sha256": "4d52feaf9ca9ab57b54d2540d85a0d1265b3fae7535233ab962ebcfcf5728c84",
+      "edited_by_human": false
+    },
+    "lessons/briefs/m01-l2-pda-and-bump-safety.brief.yaml": {
+      "sha256": "34f16c42adfb1383162d2dd222a43de80d020fd5c0d43bf59c9c056957eb3df5",
+      "edited_by_human": false
+    },
+    "lessons/briefs/m02-l1-arithmetic-and-cpi-safety.brief.yaml": {
+      "sha256": "d958ee5de76bae060d9b6eaf62e7809706d9b3d94c5d329db1f8011f927b6282",
+      "edited_by_human": false
+    },
+    "lessons/briefs/m03-l1-fuzzing-with-trident.brief.yaml": {
+      "sha256": "4b6962d3c31806109b728d36ab85dd0d6dd535e4f0e9d8172c5c2ee8841c714b",
+      "edited_by_human": false
+    },
+    "lessons/research/m03-l1-fuzzing-with-trident.research.yaml": {
+      "sha256": "35975afc83843b5899a50d0838b00aa025d82d41b8824fb3391ffdafa4cc91d1",
+      "edited_by_human": false
+    },
+    "lessons/facts/m03-l1-fuzzing-with-trident.facts.md": {
+      "sha256": "dabd4c026dbaae10d8ca91b39cf8a8a1fa402f78ea466134c416d652a0fe93f6",
+      "edited_by_human": false
+    },
+    "lessons/briefs/m03-l2-capstone-audit-ctf.brief.yaml": {
+      "sha256": "873ec3014932b5d67d650e69b0eda0d56f0a6ade50ac1684dc8d6f1cb73b0066",
+      "edited_by_human": false
+    },
+    "lessons/drafts/.gitkeep": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "edited_by_human": false
+    },
+    "cadence.yaml": {
+      "sha256": "842f5e9829a04c13875d9041a447cdc41165314e181e1bed8bc328815423a3f5",
+      "edited_by_human": false
+    },
+    "assessment.yaml": {
+      "sha256": "6512d779418780efbcefc9b3b0b8d12042780c95562fe1d6411da474f10ea239",
+      "edited_by_human": false
+    },
+    "_state.yaml": {
+      "sha256": "386bfe13818fb6e519aac1a7690be849244833ceb55f36191e58b164ef44e742",
+      "edited_by_human": false
+    },
+    "queue/NEXT.md": {
+      "sha256": "dc9aff6579e2c26bd8fb3eba8ddcc64c6b2775c961fa6274f12531e50539894b",
+      "edited_by_human": false
+    },
+    "README.md": {
+      "sha256": "151472d5c88e03f1321b76fb06874c6f3e207268b79f4bf96c728a8fbdcc25c8",
+      "edited_by_human": false
+    }
+  }
+}

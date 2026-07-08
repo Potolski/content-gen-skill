@@ -1,0 +1,41 @@
+{
+  "name": "solanabr",
+  "owner": {
+    "name": "Superteam Brazil",
+    "email": "core@superteam.com.br"
+  },
+  "metadata": {
+    "description": "Superteam Brazil Claude Code plugins",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "content-gen-skill",
+      "source": "./",
+      "description": "Create educational Solana/Web3 content in any form \u2014 courses, tutorials, walkthroughs, essays, slide decks (text specs), and short posts/threads. Routes the form, designs backward from a measurable outcome, grounds every technical claim against live sources, delivers fully written text through the writer-style voice seam (with a brief-only mode), and finishes with a tunable visual-placeholder pass (specs for charts/diagrams/tables \u2014 never images). Courses additionally emit a validated filesystem of per-lesson briefs.",
+      "version": "0.2.0",
+      "author": {
+        "name": "Superteam Brazil",
+        "email": "core@superteam.com.br"
+      },
+      "homepage": "https://github.com/solanabr/content-gen-skill",
+      "license": "MIT",
+      "keywords": [
+        "solana",
+        "web3",
+        "education",
+        "content-gen",
+        "course",
+        "curriculum",
+        "tutorial",
+        "walkthrough",
+        "essay",
+        "slides",
+        "thread",
+        "instructional-design",
+        "pedagogy",
+        "superteam"
+      ]
+    }
+  ]
+}

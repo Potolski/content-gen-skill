@@ -1,0 +1,29 @@
+module:
+  id: module-defense
+  title: "The checks that stop most exploits"
+  driving_question: "Which account checks are load-bearing, and what happens without them?"
+  outcome:
+    bloom: implement
+    statement: "add signer, owner, and canonical-bump checks that close the planted holes"
+  traces_to:
+    - to-find-fix-vulns
+  artifact: "the same program, hardened"
+  artifact_rung: 3
+  depends_on:
+    - module-offense
+  requires_skills:
+    - threat-modeling
+  teaches_skills:
+    - account-validation
+    - pda-security
+  patterns:
+    - security-epoch
+    - build-it-twice
+  difficulty_band: 2
+  lessons:
+    - signer-and-owner-checks
+    - pda-and-bump-safety
+  retrieval_checkpoint: "Given a snippet, spot the missing owner check and the non-canonical bump."
+  lesson_files:
+    signer-and-owner-checks: "../../lessons/briefs/m01-l1-signer-and-owner-checks.brief.yaml"
+    pda-and-bump-safety: "../../lessons/briefs/m01-l2-pda-and-bump-safety.brief.yaml"

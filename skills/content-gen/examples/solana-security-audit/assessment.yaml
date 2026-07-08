@@ -1,0 +1,35 @@
+model: "capstone+ctf"
+gate_principle: "Completion is gated on finding, fixing, and fuzzing real bugs — never on watching."
+proof_matrix:
+  - outcome: to-find-fix-vulns
+    proven_by: checkpoint-big-four
+    evidence: "spot-the-bug checkpoint across the four classes"
+  - outcome: to-audit-program
+    proven_by: capstone-audit-ctf
+    evidence: "findings list + fixed program + passing fuzz test"
+checkpoints:
+  - id: checkpoint-big-four
+    after_module: module-arith-cpi
+    type: mini-build
+    spec: "Given three snippets, identify the missing check (owner / canonical-bump / checked-math) and fix one."
+cumulative_checkpoint:
+  after_module: module-arith-cpi
+  spec: "Re-harden a fresh small program across all four vulnerability classes before the fuzz+audit capstone."
+capstone:
+  id: capstone-audit-ctf
+  statement: "Audit an unfamiliar program: find the planted bugs, ship fixes, and add a fuzz test that catches a regression."
+  requires_skills:
+    - account-validation
+    - pda-security
+    - arithmetic-safety
+    - cpi-security
+    - fuzzing
+  rubric:
+    - "all planted vulnerabilities identified"
+    - "each fix adds the missing check (not a symptom patch)"
+    - "a fuzz test catches a reintroduced bug"
+    - "legitimate paths still pass"
+  credential: on-chain-NFT
+  traces_to:
+    - to-find-fix-vulns
+    - to-audit-program

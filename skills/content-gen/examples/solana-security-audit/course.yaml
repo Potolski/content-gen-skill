@@ -1,0 +1,103 @@
+schema_version: 1
+course:
+  id: solana-program-security-audit
+  title: "Audit Solana Programs: Exploit, Harden, Fuzz"
+  one_line_promise: "By the end you can take an unfamiliar Solana program, find the planted vulnerabilities, ship the fixes, and prove it with a fuzz harness — the way an auditor does."
+  version: 0.1.0
+  status: draft
+  created: 2026-06-27
+  audience:
+    who: solana-dev-leveling-up
+    prior_model: "Already builds and tests Anchor/native programs (accounts, PDAs, CPIs, SPL tokens). Wants the security tier."
+    prerequisites:
+      - "has shipped a PDA + CPI program"
+      - "comfortable reading Rust and running anchor test"
+  terminal_outcomes:
+    - id: to-find-fix-vulns
+      bloom: analyze
+      statement: "identify and fix the common Solana program vulnerabilities (signer/owner, PDA/bump, arithmetic, arbitrary CPI) in an unfamiliar codebase"
+    - id: to-audit-program
+      bloom: evaluate
+      statement: "audit an unfamiliar Solana program end-to-end: find the planted bugs, ship fixes, and add a fuzz test that catches a regression"
+  format: self-paced
+  length_target:
+    hours: 8
+    lessons: 6
+    weeks: 3
+  credential: on-chain-NFT
+  routing:
+    backbone_pattern:
+      - security-epoch
+    lesson_template: overview-lab-challenge
+    guest_patterns:
+      - build-it-twice
+      - testing-thread
+    security: security-epoch
+  artifact_ladder:
+    - pda-app
+    - defi
+    - capstone
+dag:
+  nodes:
+    - threat-modeling
+    - account-validation
+    - pda-security
+    - arithmetic-safety
+    - cpi-security
+    - fuzzing
+  edges:
+    -
+      - threat-modeling
+      - account-validation
+    -
+      - account-validation
+      - pda-security
+    -
+      - pda-security
+      - arithmetic-safety
+    -
+      - arithmetic-safety
+      - cpi-security
+    -
+      - cpi-security
+      - fuzzing
+glossary:
+  - term: owner-check
+    def: "Verifying an account is owned by the expected program before trusting its data."
+    first_taught: signer-and-owner-checks
+  - term: canonical-bump
+    def: "The single valid PDA bump; using a non-canonical bump is an exploitable forgery."
+    first_taught: pda-and-bump-safety
+  - term: arbitrary-cpi
+    def: "Invoking a caller-supplied program id without validation — lets an attacker substitute a malicious program."
+    first_taught: arithmetic-and-cpi-safety
+concept_ledger:
+  - concept: threat-modeling
+    introduced_in: the-exploit-mindset
+  - concept: account-validation
+    introduced_in: signer-and-owner-checks
+  - concept: pda-security
+    introduced_in: pda-and-bump-safety
+  - concept: arithmetic-safety
+    introduced_in: arithmetic-and-cpi-safety
+  - concept: cpi-security
+    introduced_in: arithmetic-and-cpi-safety
+  - concept: fuzzing
+    introduced_in: fuzzing-with-trident
+references:
+  cadence: cadence.yaml
+  assessment: assessment.yaml
+  state: "_state.yaml"
+  manifest: manifest.json
+modules:
+  - module-offense
+  - module-defense
+  - module-arith-cpi
+  - module-fuzz-and-audit
+lessons:
+  - the-exploit-mindset
+  - signer-and-owner-checks
+  - pda-and-bump-safety
+  - arithmetic-and-cpi-safety
+  - fuzzing-with-trident
+  - capstone-audit-ctf

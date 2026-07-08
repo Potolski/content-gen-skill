@@ -1,0 +1,93 @@
+# ── repo-specific ────────────────────────────────────────────────
+.claude/
+.mcp.json
+.gitmodules
+CLAUDE.local.md
+
+# generated output (user artifacts, not skill source)
+courses/
+content/
+
+# local reference material (inspiration/study only, not committed)
+course-skill-draft/
+
+# heavy raw brand source — the shipped, distilled subset lives in skills/content-gen/brand/
+brand/stbr/Fonts/
+brand/**/*.ai
+
+# scraped third-party source text — local analysis context ONLY, never distributed
+# (analysis docs META.md/FORM.md/PATTERNS.md/catalog.md remain tracked; raw scrapes do not)
+**/raw/
+**/_scrape-report.md
+/tmp-scrape/
+
+# secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id.json
+
+# ── macOS ────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# ── Windows ──────────────────────────────────────────────────────
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# ── Linux ────────────────────────────────────────────────────────
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ── Python ───────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ── Node / TypeScript ────────────────────────────────────────────
+node_modules/
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# ── Rust / Solana / Anchor ───────────────────────────────────────
+target/
+.anchor/
+test-ledger/
+.surfpool/
+*.so
+
+# ── editors ──────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.history/

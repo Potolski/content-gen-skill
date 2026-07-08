@@ -1,0 +1,28 @@
+lesson:
+  id: token-deposit-cpi
+  title: "Deposit an SPL token: your first CPI"
+  objectives:
+    - bloom: implement
+      statement: "transfer SPL tokens into a program-controlled account via a CPI"
+  prerequisites:
+    - per-user-pda-vault
+  hook: "Your vault holds SOL. Real protocols hold tokens. To move a user's USDC, your program has to call another program — the Token Program. How does one program call another?"
+  concept_spec: "Cross-Program Invocation: invoke / invoke_signed; the vault PDA signs for itself. One new element: the CPI (token mechanics introduced alongside)."
+  artifact_spec: "Add a deposit_token instruction that CPIs into the Token Program to move tokens from the user's ATA into the vault's ATA."
+  exercise_spec: "Completion: fill the CPI accounts struct (TODO). Solo: add withdraw_token with an owner check. Accept: deposit moves the balance; unauthorized withdraw fails."
+  the_tradeoff: "CPIs make programs composable (your vault works with any SPL token) — BUT each adds compute cost and a trust surface; signing as a PDA means the seeds must match exactly or the CPI fails."
+  just_in_time:
+    define:
+      - cross-program-invocation
+      - invoke_signed
+      - associated-token-account
+    footguns:
+      - "wrong PDA seeds in invoke_signed"
+      - "missing owner check on withdraw"
+      - "unchecked token mint"
+  assessment: "anchor test: token balance moves on deposit; withdraw by non-owner reverts"
+  difficulty: 3
+  fading: "CPI accounts shown once; completion problem for the struct; solo for withdraw"
+  dominant_job: show-how
+  voice_notes: "documented mechanism → Helius expository craft; flag security footguns inline (Footguns dose, not a full epoch)."
+  est_length: "1400 words / ~14 min"

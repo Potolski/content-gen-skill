@@ -1,0 +1,734 @@
+{
+  "schema_version": 1,
+  "course": {
+    "id": "solana-for-solidity-devs",
+    "title": "Solana for Solidity Devs: Ship Four Programs",
+    "one_line_promise": "By the end you can build, test, and deploy a PDA-backed SPL-token vault on Solana devnet, and explain exactly how the account model differs from EVM storage.",
+    "version": "0.1.0",
+    "status": "draft",
+    "created": "2026-06-27",
+    "audience": {
+      "who": "evm-dev",
+      "prior_model": "Strong Solidity/EVM model: contracts, storage variables, mappings, gas, revert.",
+      "prerequisites": [
+        "comfortable with TypeScript",
+        "has shipped at least one Solidity contract"
+      ]
+    },
+    "terminal_outcomes": [
+      {
+        "id": "to-deploy-vault",
+        "bloom": "create",
+        "statement": "build, test, and deploy a PDA-backed SPL-token vault on devnet with correct signer/owner checks"
+      },
+      {
+        "id": "to-explain-accounts",
+        "bloom": "explain",
+        "statement": "explain how Solana's account model differs from EVM storage"
+      }
+    ],
+    "format": "self-paced",
+    "length_target": {
+      "hours": 6,
+      "lessons": 6,
+      "weeks": 3
+    },
+    "credential": "on-chain-NFT",
+    "routing": {
+      "backbone_pattern": [
+        "map-from-known",
+        "challenge-ladder"
+      ],
+      "lesson_template": "overview-lab-challenge",
+      "guest_patterns": [
+        "build-it-twice"
+      ],
+      "security": "inline-footguns"
+    },
+    "artifact_ladder": [
+      "hello-world",
+      "counter",
+      "pda-app",
+      "cpi-composition",
+      "capstone"
+    ]
+  },
+  "dag": {
+    "nodes": [
+      "solana-basics",
+      "compute-and-errors",
+      "account-model",
+      "pdas",
+      "cpis",
+      "spl-tokens"
+    ],
+    "edges": [
+      [
+        "solana-basics",
+        "compute-and-errors"
+      ],
+      [
+        "solana-basics",
+        "account-model"
+      ],
+      [
+        "account-model",
+        "pdas"
+      ],
+      [
+        "pdas",
+        "cpis"
+      ],
+      [
+        "cpis",
+        "spl-tokens"
+      ]
+    ]
+  },
+  "glossary": [
+    {
+      "term": "account",
+      "def": "The unit of state on Solana; programs are stateless and read/write accounts passed in (the analog of EVM storage, but external).",
+      "first_taught": "state-lives-in-accounts"
+    },
+    {
+      "term": "program-derived-address",
+      "def": "A deterministic program-owned address from seeds + a canonical bump; replaces Solidity mappings for per-key state.",
+      "first_taught": "per-user-pda-vault"
+    },
+    {
+      "term": "cross-program-invocation",
+      "def": "One program calling another (e.g. the Token Program); the EVM analog of an external contract call.",
+      "first_taught": "token-deposit-cpi"
+    }
+  ],
+  "concept_ledger": [
+    {
+      "concept": "solana-basics",
+      "introduced_in": "hello-and-toolchain"
+    },
+    {
+      "concept": "compute-and-errors",
+      "introduced_in": "compute-and-errors"
+    },
+    {
+      "concept": "account-model",
+      "introduced_in": "state-lives-in-accounts"
+    },
+    {
+      "concept": "pdas",
+      "introduced_in": "per-user-pda-vault"
+    },
+    {
+      "concept": "cpis",
+      "introduced_in": "token-deposit-cpi"
+    },
+    {
+      "concept": "spl-tokens",
+      "introduced_in": "token-deposit-cpi"
+    }
+  ],
+  "modules": [
+    {
+      "id": "module-mappings",
+      "title": "What maps 1:1 from Solidity — and what doesn't?",
+      "driving_question": "Which of my EVM instincts transfer, and which will bite me?",
+      "outcome": {
+        "bloom": "implement",
+        "statement": "build and deploy a hello-world program and map its parts to EVM equivalents"
+      },
+      "traces_to": [
+        "to-deploy-vault"
+      ],
+      "artifact": "toolchain + deployed hello",
+      "artifact_rung": 0,
+      "depends_on": [],
+      "requires_skills": [],
+      "teaches_skills": [
+        "solana-basics"
+      ],
+      "patterns": [
+        "map-from-known",
+        "completion-loop"
+      ],
+      "difficulty_band": 1,
+      "lessons": [
+        "hello-and-toolchain"
+      ],
+      "retrieval_checkpoint": "List three things that map 1:1 from Solidity and two that do not."
+    },
+    {
+      "id": "module-gas-and-revert",
+      "title": "Where did gas and revert go?",
+      "driving_question": "What replaced gas metering and require/revert?",
+      "outcome": {
+        "bloom": "implement",
+        "statement": "set a compute budget and return a custom program error"
+      },
+      "traces_to": [
+        "to-deploy-vault"
+      ],
+      "artifact": "compute budget + custom errors",
+      "artifact_rung": 0,
+      "depends_on": [
+        "module-mappings"
+      ],
+      "requires_skills": [
+        "solana-basics"
+      ],
+      "teaches_skills": [
+        "compute-and-errors"
+      ],
+      "patterns": [
+        "map-from-known"
+      ],
+      "difficulty_band": 1,
+      "lessons": [
+        "compute-and-errors"
+      ],
+      "retrieval_checkpoint": "Map gas→compute units and require()→custom error in your own words."
+    },
+    {
+      "id": "module-state",
+      "title": "There are no storage variables — so where does state live?",
+      "driving_question": "If a program is stateless, where does `count` go?",
+      "outcome": {
+        "bloom": "implement",
+        "statement": "create and write to a data account from a program"
+      },
+      "traces_to": [
+        "to-explain-accounts"
+      ],
+      "artifact": "a counter in a data account",
+      "artifact_rung": 1,
+      "depends_on": [
+        "module-gas-and-revert"
+      ],
+      "requires_skills": [
+        "solana-basics"
+      ],
+      "teaches_skills": [
+        "account-model"
+      ],
+      "patterns": [
+        "concept-spine",
+        "overview-lab-challenge"
+      ],
+      "difficulty_band": 2,
+      "lessons": [
+        "state-lives-in-accounts"
+      ],
+      "retrieval_checkpoint": "Explain why two transactions touching different accounts can run in parallel."
+    },
+    {
+      "id": "module-pdas",
+      "title": "Solidity had mappings; Solana doesn't. Now what?",
+      "driving_question": "How do I give every user their own slot without a mapping?",
+      "outcome": {
+        "bloom": "implement",
+        "statement": "derive a canonical PDA and store per-user state under it"
+      },
+      "traces_to": [
+        "to-deploy-vault"
+      ],
+      "artifact": "per-user PDA vault",
+      "artifact_rung": 3,
+      "depends_on": [
+        "module-state"
+      ],
+      "requires_skills": [
+        "account-model"
+      ],
+      "teaches_skills": [
+        "pdas"
+      ],
+      "patterns": [
+        "challenge-ladder",
+        "build-it-twice"
+      ],
+      "difficulty_band": 2,
+      "lessons": [
+        "per-user-pda-vault"
+      ],
+      "retrieval_checkpoint": "Re-derive a PDA for an unseen seed scheme and say why the bump is stored."
+    },
+    {
+      "id": "module-cpi-tokens",
+      "title": "How do programs call other programs and move tokens?",
+      "driving_question": "How does my vault move a user's USDC?",
+      "outcome": {
+        "bloom": "implement",
+        "statement": "transfer SPL tokens into a program-controlled account via a CPI"
+      },
+      "traces_to": [
+        "to-deploy-vault"
+      ],
+      "artifact": "SPL-token deposit via CPI",
+      "artifact_rung": 6,
+      "depends_on": [
+        "module-pdas"
+      ],
+      "requires_skills": [
+        "pdas"
+      ],
+      "teaches_skills": [
+        "cpis",
+        "spl-tokens"
+      ],
+      "patterns": [
+        "challenge-ladder"
+      ],
+      "difficulty_band": 3,
+      "lessons": [
+        "token-deposit-cpi"
+      ],
+      "retrieval_checkpoint": "Explain why invoke_signed needs the exact PDA seeds and what fails if they're wrong."
+    },
+    {
+      "id": "module-capstone",
+      "title": "Ship your own.",
+      "driving_question": "Can I design and ship a small program end-to-end?",
+      "outcome": {
+        "bloom": "create",
+        "statement": "design, test, and deploy an original PDA + SPL-token program"
+      },
+      "traces_to": [
+        "to-deploy-vault",
+        "to-explain-accounts"
+      ],
+      "artifact": "freeform capstone",
+      "artifact_rung": 7,
+      "depends_on": [
+        "module-cpi-tokens"
+      ],
+      "requires_skills": [
+        "pdas",
+        "cpis",
+        "spl-tokens"
+      ],
+      "teaches_skills": [],
+      "patterns": [
+        "challenge-ladder"
+      ],
+      "difficulty_band": 3,
+      "lessons": [
+        "capstone-ship-your-own"
+      ],
+      "retrieval_checkpoint": "Defend your account layout and one trade-off you made."
+    }
+  ],
+  "lessons": [
+    {
+      "id": "hello-and-toolchain",
+      "module": "module-mappings",
+      "order": 1,
+      "brief": {
+        "id": "hello-and-toolchain",
+        "title": "Your Solidity instincts, mapped onto Solana",
+        "objectives": [
+          {
+            "bloom": "implement",
+            "statement": "build and deploy a hello-world program and name its EVM equivalents"
+          }
+        ],
+        "prerequisites": [],
+        "hook": "You can read Solidity in your sleep. Most of that intuition transfers to Solana — until it suddenly, expensively doesn't. Let's get a program deployed and find the seams.",
+        "concept_spec": "The 1:1 map: program≈deployed contract, instruction≈function, signer≈msg.sender, compute≈gas. Worked example: deploy hello-world and read the log. One new element: the build/deploy/invoke loop.",
+        "artifact_spec": "Build and deploy hello-world to a local validator; invoke it; see the greeting in the logs.",
+        "exercise_spec": "Completion: change the logged message (TODO) and redeploy. Solo: add a second instruction. Accept: both messages appear in the logs.",
+        "the_tradeoff": "Leading with EVM mappings gets you productive fast, BUT a few of those mappings are traps — the account model (next modules) is where the analogy breaks.",
+        "just_in_time": {
+          "define": [
+            "program",
+            "instruction",
+            "signer"
+          ],
+          "footguns": [
+            "assuming a contract holds its own state",
+            "wrong cluster in the CLI"
+          ]
+        },
+        "assessment": "deploy hello-world and show a changed log line",
+        "difficulty": 1,
+        "fading": "worked",
+        "dominant_job": "motivate",
+        "voice_notes": "course opener; spine carries it; the 'until it expensively doesn't' line is the hook.",
+        "est_length": "1000 words / ~10 min"
+      }
+    },
+    {
+      "id": "compute-and-errors",
+      "module": "module-gas-and-revert",
+      "order": 1,
+      "brief": {
+        "id": "compute-and-errors",
+        "title": "Where gas and revert went",
+        "objectives": [
+          {
+            "bloom": "explain",
+            "statement": "explain how compute units replace gas and how program errors replace revert"
+          },
+          {
+            "bloom": "implement",
+            "statement": "set a compute budget and return a custom error"
+          }
+        ],
+        "prerequisites": [
+          "hello-and-toolchain"
+        ],
+        "hook": "In Solidity, gas and require() were always in your hands. On Solana they're still here — renamed, repriced, and with sharper edges. Where did they go?",
+        "concept_spec": "Compute units ≈ gas (a per-transaction budget you can raise); custom program errors ≈ revert reasons. Worked example: add a compute-budget instruction and a custom error to hello-world. One new element: the compute budget.",
+        "artifact_spec": "Augment the program with a compute-budget request and an instruction that returns a custom error on bad input.",
+        "exercise_spec": "Completion: raise the compute unit limit (TODO). Solo: add a second error variant. Accept: the error surfaces by name in the test.",
+        "the_tradeoff": "A raisable compute budget is flexible, BUT every unit costs priority fee — and unlike gas, you set the limit up front, so under-budgeting fails the whole transaction.",
+        "just_in_time": {
+          "define": [
+            "compute-unit",
+            "compute-budget",
+            "program-error"
+          ],
+          "footguns": [
+            "under-budgeting compute",
+            "swallowing errors instead of returning typed ones"
+          ]
+        },
+        "assessment": "anchor test: the custom error is returned on bad input; the tx fits the set budget",
+        "difficulty": 1,
+        "fading": "worked",
+        "dominant_job": "derive-why",
+        "voice_notes": "map-from-known framing; derive WHY the budget is up-front, not metered as you go.",
+        "est_length": "1100 words / ~11 min"
+      }
+    },
+    {
+      "id": "state-lives-in-accounts",
+      "module": "module-state",
+      "order": 1,
+      "brief": {
+        "id": "state-lives-in-accounts",
+        "title": "Where state lives: accounts, not storage variables",
+        "objectives": [
+          {
+            "bloom": "explain",
+            "statement": "explain why Solana programs are stateless and where their state lives"
+          },
+          {
+            "bloom": "implement",
+            "statement": "create and write to a data account from a program"
+          }
+        ],
+        "prerequisites": [
+          "hello-and-toolchain",
+          "compute-and-errors"
+        ],
+        "hook": "In Solidity, `uint public count;` just... persists. You wrote to storage and forgot about it. Your first Solana program has nowhere to put `count`. Where did storage go?",
+        "concept_spec": "Programs are stateless code; state lives in separate accounts the caller passes in. Teach by building a counter whose value lives in a data account. One new element: the data account (defer PDAs to next lesson).",
+        "artifact_spec": "A counter program with an initialize and increment; the count stored in a plain data account.",
+        "exercise_spec": "Completion: fill in the account's space/size (TODO). Solo: add a decrement. Accept: value persists across two separate transactions; test passes.",
+        "the_tradeoff": "Separating code from state buys Solana parallelism (txs touching different accounts run concurrently) — BUT you must pass every account a program will touch, and size/rent it yourself up front.",
+        "just_in_time": {
+          "define": [
+            "account",
+            "data-account",
+            "rent",
+            "account-space"
+          ],
+          "footguns": [
+            "under-sizing the account",
+            "forgetting the account is not auto-created"
+          ]
+        },
+        "assessment": "anchor test: increment persists across txs; reading back returns the new value",
+        "difficulty": 2,
+        "fading": "fully worked counter shown; completion problem for sizing; solo for decrement",
+        "dominant_job": "derive-why",
+        "voice_notes": "contested 'why is it built this way' — Vitalik craft over the spine; the parallelism payoff is a great order-of-magnitude seam. Map from Solidity storage explicitly.",
+        "est_length": "1300 words / ~13 min"
+      }
+    },
+    {
+      "id": "per-user-pda-vault",
+      "module": "module-pdas",
+      "order": 1,
+      "brief": {
+        "id": "per-user-pda-vault",
+        "title": "Per-user state with a PDA (the mapping you don't have)",
+        "objectives": [
+          {
+            "bloom": "explain",
+            "statement": "explain why Solana has no mappings and how PDAs replace them"
+          },
+          {
+            "bloom": "implement",
+            "statement": "derive a canonical PDA seeded by the user and store per-user state under it"
+          }
+        ],
+        "prerequisites": [
+          "state-lives-in-accounts",
+          "account-model"
+        ],
+        "hook": "In Solidity you'd write mapping(address => Vault). Solana has no mappings. So how does each user get their own vault?",
+        "concept_spec": "PDAs: program-owned, deterministically-derived accounts (seeds + canonical bump). Build it twice — native find_program_address, then the Anchor seeds/bump constraint — so the abstraction is visible. One new element: the PDA derivation.",
+        "artifact_spec": "Upgrade the counter into a per-user vault PDA, seeded by the user's pubkey, with initialize and a balance.",
+        "exercise_spec": "Completion: fill in the seeds array (TODO). Solo: add a second PDA keyed by a label. Accept: two users get distinct, recoverable vaults; a reinit attempt fails.",
+        "the_tradeoff": "PDAs are deterministic and need no stored key, BUT you must store or recompute the canonical bump, and a sloppy seed scheme is an exploit (collision / spoofing).",
+        "just_in_time": {
+          "define": [
+            "program-derived-address",
+            "canonical-bump",
+            "seeds"
+          ],
+          "footguns": [
+            "using a non-canonical bump",
+            "user-controlled seeds without validation"
+          ]
+        },
+        "assessment": "anchor test: two users get distinct vaults; reinit attempt fails",
+        "difficulty": 2,
+        "fading": "completion",
+        "dominant_job": "derive-why",
+        "voice_notes": "build-it-twice guest: show native then Anchor; the 'mapping you don't have' framing is the seam.",
+        "est_length": "1400 words / ~14 min"
+      }
+    },
+    {
+      "id": "token-deposit-cpi",
+      "module": "module-cpi-tokens",
+      "order": 1,
+      "brief": {
+        "id": "token-deposit-cpi",
+        "title": "Deposit an SPL token: your first CPI",
+        "objectives": [
+          {
+            "bloom": "implement",
+            "statement": "transfer SPL tokens into a program-controlled account via a CPI"
+          }
+        ],
+        "prerequisites": [
+          "per-user-pda-vault"
+        ],
+        "hook": "Your vault holds SOL. Real protocols hold tokens. To move a user's USDC, your program has to call another program — the Token Program. How does one program call another?",
+        "concept_spec": "Cross-Program Invocation: invoke / invoke_signed; the vault PDA signs for itself. One new element: the CPI (token mechanics introduced alongside).",
+        "artifact_spec": "Add a deposit_token instruction that CPIs into the Token Program to move tokens from the user's ATA into the vault's ATA.",
+        "exercise_spec": "Completion: fill the CPI accounts struct (TODO). Solo: add withdraw_token with an owner check. Accept: deposit moves the balance; unauthorized withdraw fails.",
+        "the_tradeoff": "CPIs make programs composable (your vault works with any SPL token) — BUT each adds compute cost and a trust surface; signing as a PDA means the seeds must match exactly or the CPI fails.",
+        "just_in_time": {
+          "define": [
+            "cross-program-invocation",
+            "invoke_signed",
+            "associated-token-account"
+          ],
+          "footguns": [
+            "wrong PDA seeds in invoke_signed",
+            "missing owner check on withdraw",
+            "unchecked token mint"
+          ]
+        },
+        "assessment": "anchor test: token balance moves on deposit; withdraw by non-owner reverts",
+        "difficulty": 3,
+        "fading": "CPI accounts shown once; completion problem for the struct; solo for withdraw",
+        "dominant_job": "show-how",
+        "voice_notes": "documented mechanism → Helius expository craft; flag security footguns inline (Footguns dose, not a full epoch).",
+        "est_length": "1400 words / ~14 min"
+      }
+    },
+    {
+      "id": "capstone-ship-your-own",
+      "module": "module-capstone",
+      "order": 1,
+      "brief": {
+        "id": "capstone-ship-your-own",
+        "title": "Ship your own program",
+        "objectives": [
+          {
+            "bloom": "create",
+            "statement": "design, build, test, and deploy an original program using a PDA + an SPL-token CPI"
+          }
+        ],
+        "prerequisites": [
+          "token-deposit-cpi"
+        ],
+        "hook": "You've shipped the pieces. Now build something that's yours — small, real, and on devnet by the end of the day.",
+        "concept_spec": "Integration: combine account state, a PDA, and a token CPI into one original program of the learner's choosing. No new primitive — this consolidates everything.",
+        "artifact_spec": "An original small program (learner's design) using an account/PDA + an SPL-token CPI, deployed to devnet with a passing test suite.",
+        "exercise_spec": "Solo: design and ship it. Accept: deploys to devnet; tests pass; signer + owner checks on every mutating instruction.",
+        "the_tradeoff": "Freeform scope is motivating, BUT it's where untested edge cases hide — the test suite is the gate, not the demo.",
+        "just_in_time": {
+          "define": [],
+          "footguns": [
+            "skipping owner checks under time pressure",
+            "shipping without a failing-path test"
+          ]
+        },
+        "assessment": "deployed devnet program id + passing test suite (signer/owner checks present)",
+        "difficulty": 3,
+        "fading": "solo",
+        "dominant_job": "motivate",
+        "voice_notes": "course close; spine carries it; celebrate the ship, name the one trade-off they chose.",
+        "est_length": "900 words / ~9 min"
+      }
+    }
+  ],
+  "cadence": {
+    "pedagogy": {
+      "fading_schedule": [
+        {
+          "lesson": "hello-and-toolchain",
+          "mode": "worked",
+          "difficulty": 1
+        },
+        {
+          "lesson": "compute-and-errors",
+          "mode": "worked",
+          "difficulty": 1
+        },
+        {
+          "lesson": "state-lives-in-accounts",
+          "mode": "worked",
+          "difficulty": 2
+        },
+        {
+          "lesson": "per-user-pda-vault",
+          "mode": "completion",
+          "difficulty": 2
+        },
+        {
+          "lesson": "token-deposit-cpi",
+          "mode": "completion",
+          "difficulty": 3
+        },
+        {
+          "lesson": "capstone-ship-your-own",
+          "mode": "solo",
+          "difficulty": 3
+        }
+      ],
+      "difficulty_curve": [
+        1,
+        1,
+        2,
+        2,
+        3,
+        3
+      ],
+      "worked_examples_removed_after": "module-pdas",
+      "spiral": [
+        {
+          "skill": "account-model",
+          "reappears_in": [
+            "per-user-pda-vault",
+            "token-deposit-cpi",
+            "capstone-ship-your-own"
+          ]
+        },
+        {
+          "skill": "pdas",
+          "reappears_in": [
+            "token-deposit-cpi",
+            "capstone-ship-your-own"
+          ]
+        }
+      ],
+      "retrieval_checkpoints": [
+        "checkpoint-accounts"
+      ],
+      "cumulative_checkpoint_before": "capstone-ship-your-own"
+    },
+    "release": {
+      "mode": "weekly-drip",
+      "start_date": "2026-07-06",
+      "timezone": "America/Sao_Paulo",
+      "schedule": [
+        {
+          "week": 1,
+          "publish": [
+            "hello-and-toolchain",
+            "compute-and-errors"
+          ],
+          "est_effort_hours": 6
+        },
+        {
+          "week": 2,
+          "publish": [
+            "state-lives-in-accounts",
+            "per-user-pda-vault"
+          ],
+          "est_effort_hours": 9
+        },
+        {
+          "week": 3,
+          "publish": [
+            "token-deposit-cpi",
+            "capstone-ship-your-own"
+          ],
+          "est_effort_hours": 9
+        }
+      ],
+      "per_lesson_effort": [
+        {
+          "lesson": "per-user-pda-vault",
+          "draft_words": 1400,
+          "research_hours": 1.5,
+          "write_hours": 2,
+          "review_hours": 1
+        }
+      ],
+      "freshness_policy": {
+        "onchain_numbers_restale_after_days": 30,
+        "applies_to": [
+          "state-lives-in-accounts",
+          "token-deposit-cpi"
+        ]
+      }
+    }
+  },
+  "assessment": {
+    "model": "capstone+onchain",
+    "gate_principle": "Completion is gated on a deployed program + passing tests, never on watching.",
+    "proof_matrix": [
+      {
+        "outcome": "to-deploy-vault",
+        "proven_by": "capstone-ship-your-own",
+        "evidence": "deployed devnet program id + passing test suite"
+      },
+      {
+        "outcome": "to-explain-accounts",
+        "proven_by": "checkpoint-accounts",
+        "evidence": "written explain-it-back, rubric-checked"
+      }
+    ],
+    "checkpoints": [
+      {
+        "id": "checkpoint-accounts",
+        "after_module": "module-state",
+        "type": "explain-back",
+        "spec": "Explain where state lives and why programs are stateless; name one trade-off vs EVM storage."
+      }
+    ],
+    "cumulative_checkpoint": {
+      "after_module": "module-cpi-tokens",
+      "spec": "PDA vault that deposits an SPL token via CPI with an owner check, reusing account validation from every prior build."
+    },
+    "capstone": {
+      "id": "capstone-ship-your-own",
+      "statement": "Ship an original small program using a PDA + an SPL-token CPI, deployed to devnet, with passing tests.",
+      "requires_skills": [
+        "account-model",
+        "pdas",
+        "cpis",
+        "spl-tokens"
+      ],
+      "rubric": [
+        "uses a PDA with the canonical bump stored",
+        "performs at least one CPI",
+        "signer + owner checks on every mutating instruction",
+        "tests pass; deploys to devnet"
+      ],
+      "credential": "on-chain-NFT",
+      "traces_to": [
+        "to-deploy-vault",
+        "to-explain-accounts"
+      ]
+    }
+  }
+}

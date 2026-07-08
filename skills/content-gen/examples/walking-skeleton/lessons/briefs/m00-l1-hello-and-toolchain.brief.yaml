@@ -1,0 +1,26 @@
+lesson:
+  id: hello-and-toolchain
+  title: "Get a program on-chain in ten minutes"
+  objectives:
+    - bloom: implement
+      statement: "deploy a hello-world program to a local validator and read its log"
+  prerequisites: []
+  hook: "You've shipped web2 services for years. Today you'll put real code on a public computer that no one — not even you — can quietly change. That shift is the whole game."
+  concept_spec: "What a Solana program is (a stateless, deployed function) and the dev loop: build, deploy, invoke, read logs. Worked example: the default hello-world."
+  artifact_spec: "Build and deploy the hello-world program to a local validator; invoke it; see the greeting in the logs."
+  exercise_spec: "Completion: change the logged message and redeploy. Solo: add a second log line. Accept: the new message shows in the validator logs."
+  the_tradeoff: "A local validator is instant and free but throws away state on restart — great for the loop, useless as a record. We move to devnet once the program is real."
+  just_in_time:
+    define:
+      - program
+      - validator
+      - log
+    footguns:
+      - "forgetting to rebuild before redeploy"
+      - "pointing the CLI at the wrong cluster"
+  assessment: "deploy hello-world locally and show the changed log line"
+  difficulty: 1
+  fading: worked
+  dominant_job: motivate
+  voice_notes: "course opener; spine carries it; the felt 'no one can change it' shift is the hook."
+  est_length: "900 words / ~9 min"

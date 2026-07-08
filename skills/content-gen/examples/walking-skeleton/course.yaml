@@ -1,0 +1,76 @@
+schema_version: 1
+course:
+  id: solana-pda-counter-for-web2-devs
+  title: "Ship a Per-User Counter on Solana"
+  one_line_promise: "By the end you can build, test, and deploy a per-user PDA counter program to Solana devnet — even if you've never touched a blockchain."
+  version: 0.1.0
+  status: draft
+  created: 2026-06-27
+  audience:
+    who: web2-dev
+    prior_model: "Backend web2: functions, a database, REST handlers. No blockchain."
+    prerequisites:
+      - "comfortable with the command line"
+      - "some TypeScript or Rust exposure helps"
+  terminal_outcomes:
+    - id: to-pda-counter
+      bloom: create
+      statement: "build, test, and deploy a per-user PDA counter program to Solana devnet"
+  format: self-paced
+  length_target:
+    hours: 2
+    lessons: 3
+    weeks: 1
+  credential: none
+  routing:
+    backbone_pattern:
+      - concept-spine
+      - challenge-ladder
+    lesson_template: overview-lab-challenge
+    guest_patterns: []
+    security: inline-footguns
+  artifact_ladder:
+    - hello-world
+    - counter
+    - pda-app
+dag:
+  nodes:
+    - account-model
+    - programs-instructions
+    - pdas
+  edges:
+    -
+      - account-model
+      - programs-instructions
+    -
+      - programs-instructions
+      - pdas
+    -
+      - account-model
+      - pdas
+glossary:
+  - term: account
+    def: "The unit of state on Solana; programs are stateless and read/write accounts passed to them."
+    first_taught: the-counter
+  - term: program-derived-address
+    def: "A deterministic address owned by a program, derived from seeds + a canonical bump."
+    first_taught: pda-per-user
+concept_ledger:
+  - concept: account-model
+    introduced_in: the-counter
+  - concept: programs-instructions
+    introduced_in: the-counter
+  - concept: pdas
+    introduced_in: pda-per-user
+references:
+  cadence: cadence.yaml
+  assessment: assessment.yaml
+  state: "_state.yaml"
+  manifest: manifest.json
+modules:
+  - module-first-program
+  - module-pdas
+lessons:
+  - hello-and-toolchain
+  - the-counter
+  - pda-per-user

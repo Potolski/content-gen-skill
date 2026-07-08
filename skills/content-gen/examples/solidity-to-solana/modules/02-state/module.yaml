@@ -1,0 +1,26 @@
+module:
+  id: module-state
+  title: "There are no storage variables — so where does state live?"
+  driving_question: "If a program is stateless, where does `count` go?"
+  outcome:
+    bloom: implement
+    statement: "create and write to a data account from a program"
+  traces_to:
+    - to-explain-accounts
+  artifact: "a counter in a data account"
+  artifact_rung: 1
+  depends_on:
+    - module-gas-and-revert
+  requires_skills:
+    - solana-basics
+  teaches_skills:
+    - account-model
+  patterns:
+    - concept-spine
+    - overview-lab-challenge
+  difficulty_band: 2
+  lessons:
+    - state-lives-in-accounts
+  retrieval_checkpoint: "Explain why two transactions touching different accounts can run in parallel."
+  lesson_files:
+    state-lives-in-accounts: "../../lessons/briefs/m02-l1-state-lives-in-accounts.brief.yaml"

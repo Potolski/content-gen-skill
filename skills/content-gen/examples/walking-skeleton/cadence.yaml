@@ -1,0 +1,44 @@
+pedagogy:
+  fading_schedule:
+    - lesson: hello-and-toolchain
+      mode: worked
+      difficulty: 1
+    - lesson: the-counter
+      mode: worked
+      difficulty: 1
+    - lesson: pda-per-user
+      mode: completion
+      difficulty: 2
+  difficulty_curve:
+    - 1
+    - 1
+    - 2
+  worked_examples_removed_after: module-first-program
+  spiral:
+    - skill: account-model
+      reappears_in:
+        - pda-per-user
+  retrieval_checkpoints:
+    - checkpoint-accounts
+  cumulative_checkpoint_before: capstone-pda-counter
+release:
+  mode: all-at-once
+  start_date: 2026-07-06
+  timezone: America/Sao_Paulo
+  schedule:
+    - week: 1
+      publish:
+        - hello-and-toolchain
+        - the-counter
+        - pda-per-user
+      est_effort_hours: 8
+  per_lesson_effort:
+    - lesson: pda-per-user
+      draft_words: 1400
+      research_hours: 1.5
+      write_hours: 2
+      review_hours: 1
+  freshness_policy:
+    onchain_numbers_restale_after_days: 30
+    applies_to:
+      - pda-per-user

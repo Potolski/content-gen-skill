@@ -1,0 +1,29 @@
+lesson:
+  id: the-counter
+  title: "Store a number that survives"
+  objectives:
+    - bloom: explain
+      statement: "explain why programs are stateless and state lives in accounts"
+    - bloom: implement
+      statement: "write and read a counter held in an account"
+  prerequisites:
+    - hello-and-toolchain
+  hook: "In web2 you'd just bump a row in a database. Your program has no database — and no memory between calls. So where does the count go?"
+  concept_spec: "The account model: programs are stateless; state lives in accounts you pass in. Worked example: an account holding a single u64 count, with initialize and increment."
+  artifact_spec: "A program with initialize (creates the counter account) and increment (adds one), with a test proving the value persists across calls."
+  exercise_spec: "Completion: fill in the increment handler (TODO). Solo: add a decrement that can't go below zero. Accept: anchor test shows the count persisting and the floor enforced."
+  the_tradeoff: "Putting state in a separate account is flexible and rent-cheap, BUT you pay rent to keep it alive and must pass the right account in every call — there's no implicit 'this.count'."
+  just_in_time:
+    define:
+      - account
+      - rent
+      - instruction
+    footguns:
+      - "unchecked add overflowing"
+      - "not making the account a signer/payer on init"
+  assessment: "anchor test: increment persists across two separate calls"
+  difficulty: 1
+  fading: worked
+  dominant_job: show-how
+  voice_notes: "expository backbone; the 'no this.count' line is the aha."
+  est_length: "1200 words / ~12 min"

@@ -1,0 +1,29 @@
+model: capstone
+gate_principle: "Completion is gated on a deployed, tested program — never on watching."
+proof_matrix:
+  - outcome: to-pda-counter
+    proven_by: capstone-pda-counter
+    evidence: "deployed devnet program id + passing test suite"
+checkpoints:
+  - id: checkpoint-accounts
+    after_module: module-first-program
+    type: explain-back
+    spec: "Explain where state lives and why programs are stateless; name one trade-off."
+cumulative_checkpoint:
+  after_module: module-pdas
+  spec: "Per-user PDA counter with a reinit guard, reusing the account validation from the single counter."
+capstone:
+  id: capstone-pda-counter
+  statement: "Deploy a per-user PDA counter to devnet with passing tests."
+  requires_skills:
+    - account-model
+    - programs-instructions
+    - pdas
+  rubric:
+    - "uses a PDA seeded by the user"
+    - "stores the canonical bump"
+    - "increment uses checked arithmetic"
+    - "tests pass; deploys to devnet"
+  credential: none
+  traces_to:
+    - to-pda-counter

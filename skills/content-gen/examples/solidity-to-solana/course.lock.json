@@ -1,0 +1,84 @@
+{
+  "files": {
+    "course.yaml": {
+      "sha256": "5e40b8ce665613142ee7acadf34739668cf9ee4f5338e087979960ffb1928f41",
+      "edited_by_human": false
+    },
+    "manifest.json": {
+      "sha256": "447768af07285f3e91087ceaeecc827cb3c357a0c915def39a8d8d8b2e76fc16",
+      "edited_by_human": false
+    },
+    "modules/00-mappings/module.yaml": {
+      "sha256": "f4bdc46c6d9108ca5a471997f6272f855c94f5ac16f1d3736ec914da643e1eb4",
+      "edited_by_human": false
+    },
+    "modules/01-gas-and-revert/module.yaml": {
+      "sha256": "e13bec70932fb3b36d81b6e4392ac22e375423174c0001f6fbdcebbb4b8ad474",
+      "edited_by_human": false
+    },
+    "modules/02-state/module.yaml": {
+      "sha256": "8a12def4fc9845c85b6016ebe862f3ad9ca25c43d0115e33d748c666473c743c",
+      "edited_by_human": false
+    },
+    "modules/03-pdas/module.yaml": {
+      "sha256": "e8ffa785a5d187273fe2fd70fcb858d275ea761c0820493da6ab8f2bedc6a685",
+      "edited_by_human": false
+    },
+    "modules/04-cpi-tokens/module.yaml": {
+      "sha256": "94a0c4a0d218ffbe433371afbd6dd4620486c4ef342c9abc14d55bd417a46cfe",
+      "edited_by_human": false
+    },
+    "modules/05-capstone/module.yaml": {
+      "sha256": "a2cac4b952250c47018174128ccbad0fa7c1399c2c27bd9c06ff5b01c018bd31",
+      "edited_by_human": false
+    },
+    "lessons/briefs/m00-l1-hello-and-toolchain.brief.yaml": {
+      "sha256": "6a018e6a1e1e2df280c3541722cdd6046692960b16f88baff1bcd0d90b263352",
+      "edited_by_human": false
+    },
+    "lessons/briefs/m01-l1-compute-and-errors.brief.yaml": {
+      "sha256": "9542d4bd5ed2b8b9dfb3218c1f263fccf847d1ae1f0114febaedcc840e752844",
+      "edited_by_human": false
+    },
+    "lessons/briefs/m02-l1-state-lives-in-accounts.brief.yaml": {
+      "sha256": "074d91fc4a3f14c155c67337ad2e2042ec04dfb745761dee8ec24ded955c8c80",
+      "edited_by_human": false
+    },
+    "lessons/briefs/m03-l1-per-user-pda-vault.brief.yaml": {
+      "sha256": "7df38fc5192f7c541c195424408355c871614ad1f079abad037bf49419626c6e",
+      "edited_by_human": false
+    },
+    "lessons/briefs/m04-l1-token-deposit-cpi.brief.yaml": {
+      "sha256": "a2d69c5707c544df4c13aa59b2614ce815f54803ce9f7c00436f006f8c1ed546",
+      "edited_by_human": false
+    },
+    "lessons/briefs/m05-l1-capstone-ship-your-own.brief.yaml": {
+      "sha256": "85c70f8ebbefcdef0aa68a33e438e1e5d14ab3a07dabab81ff722c98e49386ed",
+      "edited_by_human": false
+    },
+    "lessons/drafts/.gitkeep": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "edited_by_human": false
+    },
+    "cadence.yaml": {
+      "sha256": "8ae2e8e3e1849dedc49aacb3c36a64fc5343b36262886e5f8b6834ac8cab21d3",
+      "edited_by_human": false
+    },
+    "assessment.yaml": {
+      "sha256": "bb16c0fa6b77d152831737a7df8b28b19f4b36d7beed931fabf5fe9a9d279e42",
+      "edited_by_human": false
+    },
+    "_state.yaml": {
+      "sha256": "e997cf0be5e95f66a7d82ec2bf45382d7f4eb799ffea2a9772b9614268a0b156",
+      "edited_by_human": false
+    },
+    "queue/NEXT.md": {
+      "sha256": "f5fae3104ac62093c5a1dbf1577296243abdbdc415629e4254b46a13e6d1055e",
+      "edited_by_human": false
+    },
+    "README.md": {
+      "sha256": "1c9ba9881132060de801c508e9ecd2a062d5c38d2276fa5d3639a082d4d9f40c",
+      "edited_by_human": false
+    }
+  }
+}
