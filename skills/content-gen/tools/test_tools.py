@@ -13,6 +13,7 @@ import course_lib
 import validate_course
 import scaffold_course
 import verify_code
+import render_visuals
 
 
 def main() -> int:
@@ -20,7 +21,8 @@ def main() -> int:
     for name, fn in [("course_lib", course_lib.selftest),
                      ("validate_course", validate_course.selftest),
                      ("scaffold_course", scaffold_course.selftest),
-                     ("verify_code", verify_code.selftest)]:
+                     ("verify_code", verify_code.selftest),
+                     ("render_visuals", render_visuals.selftest)]:
         print(f"\n===== {name} =====")
         rc |= fn()
     print("\n" + ("ALL TOOL SELFTESTS PASSED" if rc == 0 else "SOME SELFTESTS FAILED"))
