@@ -25,11 +25,15 @@ Lesson = {
   objectives (Bloom-tagged, 1-3)
   summary / TL;DR (key facts up front)
   OVERVIEW  — worked, annotated example; read-only ("you're not expected to code along yet")
+  [quiz]    — OPTIONAL concept check (formative; immediate feedback; never gates)
   LAB       — code-along the same build; show expected output; one new element at a time
   CHALLENGE — solo variation; acceptance criteria; solution provided as a resource, not a crutch
+  [code]    — OPTIONAL runnable coding challenge (Rust/TS only; starter fails, solution passes)
   recap + retrieval question + forward link
 }
 ```
+The bracketed `[quiz]`/`[code]` are the Academy plugins (brief `quiz_blocks`/`coding_challenges`,
+lesson-brief-schema §H). They are additive and formative — the CHALLENGE/`assessment` is still what gates.
 
 ## Why it works (mechanism)
 Worked-example → completion/guided → solo *is* the fading schedule (Sweller, scaffolding/ZPD). Three

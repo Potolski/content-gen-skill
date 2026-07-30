@@ -171,6 +171,24 @@ with the writer's own tooling.
                 "credential": "on-chain-NFT", "traces_to": ["to-deploy-vault"] } }
 ```
 
+## Optional brief fields — the Academy plugins (additive)
+A lesson brief may carry two OPTIONAL arrays (lesson-brief-schema §C/§H): `quiz_blocks`
+(formative quizzes) and `coding_challenges` (runnable Rust/TS exercises; code lives in files
+under `lessons/challenges/<lesson-id>/<challenge-id>/`). They are additive — absent by default,
+never required, and existing courses are unaffected. `validate_course.py` gains `check_briefs`
+sub-checks for their specs plus a course-dir `challenges` check that the referenced
+starter/solution/tests files exist.
+
+## The Academy projection — a second, publish-only tree
+`manifest.json` has a second one-way projection alongside the emitted authoring tree: the
+**Academy publish tree**, produced by `../tools/academy_export.py emit` under
+`content/academy/courses/<slug>/` (`course.yaml` + per-lesson `lesson.yaml` with prose/quiz/code
+blocks + copied challenge files). It is the platform contract in `academy-schema.md`, NOT the
+authoring format, and it is generated read-only from the course — the source `content/courses/<id>/`
+is never mutated. `../tools/verify_challenges.py` proves each challenge's starter-fails/solution-passes
+contract. Publish-only metadata (creator wallet, difficulty, xp, id prefix, dag→skills map) lives in
+an OPTIONAL additive `manifest.academy` block, overridable by exporter flags.
+
 ## Generated, never hand-authored
 `../tools/scaffold_course.py` generates `000-cover.md`, `course.yaml`, `README.md`, `_state.yaml`,
 `course.lock.json`, `queue/NEXT.md`, and the per-module/per-lesson files from the

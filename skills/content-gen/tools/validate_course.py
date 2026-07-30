@@ -32,7 +32,7 @@ from course_lib import (
     DOMINANT_JOBS, GUEST_ONLY_JOBS, ARTIFACT_LADDER, BRIEF_REQUIRED_KEYS,
     BRIEF_CORE_KEYS, BRIEF_BUILD_KEYS, LESSON_KINDS, ID_RE, count_prose_emdashes,
     KIT_SURFACES, VISUAL_TYPES, VISUAL_FIELDS,
-    WEAK_BLOOM_VERBS, PASSIVE_ASSESSMENT_RE,
+    WEAK_BLOOM_VERBS, PASSIVE_ASSESSMENT_RE, CHALLENGE_LANGS, CHALLENGE_BUILD_TYPES,
     load_manifest, flatten_lessons, topo_sort,
 )
 
@@ -117,6 +117,102 @@ def check_dag(m: dict) -> dict:
     return _result("dag", flags)
 
 
+# ── academy plugins: quiz + coding-challenge specs (optional, additive) ─────────
+
+def check_quiz_blocks(b: dict, lid: str) -> list[str]:
+    """Validate a lesson brief's optional `quiz_blocks` against the Academy quiz schema
+    (references/academy-schema.md; schema/quiz.schema.json). Structural only. HARD:
+    stable unique ids, ≥2 options, correctness keyed to a stable option id, and the
+    single/multi correctness rule. ADVISORY: missing per-distractor feedback / explanation."""
+    qbs = b.get("quiz_blocks")
+    if qbs is None:
+        return []
+    if not isinstance(qbs, list):
+        return [f"{HARD}brief {lid} quiz_blocks must be a list"]
+    flags: list[str] = []
+    for qi, qb in enumerate(qbs):
+        where = f"{lid} quiz_blocks[{qi}]"
+        questions = (qb or {}).get("questions") if isinstance(qb, dict) else None
+        if not questions:
+            flags.append(f"{HARD}brief {where} has no questions")
+            continue
+        seen_q: set[str] = set()
+        for q in questions:
+            q = q or {}
+            qid = str(q.get("id", "")).strip()
+            if not qid:
+                flags.append(f"{HARD}brief {where} a question is missing its id")
+            elif qid in seen_q:
+                flags.append(f"{HARD}brief {where} duplicate question id '{qid}'")
+            seen_q.add(qid)
+            if not str(q.get("prompt", "")).strip():
+                flags.append(f"{HARD}brief {where} q'{qid}' has no prompt")
+            opts = q.get("options") or []
+            if len(opts) < 2:
+                flags.append(f"{HARD}brief {where} q'{qid}' needs ≥2 options")
+            oids = [str((o or {}).get("id", "")).strip() for o in opts]
+            if any(not oid for oid in oids):
+                flags.append(f"{HARD}brief {where} q'{qid}' has an option with no id "
+                             f"(correctness is keyed to a stable id, never position)")
+            if len(set(oids)) != len(oids):
+                flags.append(f"{HARD}brief {where} q'{qid}' has duplicate option id(s)")
+            n_correct = sum(1 for o in opts if (o or {}).get("correct") is True)
+            multi = bool(q.get("multiSelect", False))
+            if not multi and n_correct != 1:
+                flags.append(f"{HARD}brief {where} q'{qid}' single-select must have exactly one "
+                             f"correct option (has {n_correct})")
+            if multi and n_correct < 1:
+                flags.append(f"{HARD}brief {where} q'{qid}' multi-select needs ≥1 correct option")
+            for o in opts:
+                o = o or {}
+                if o.get("correct") is False and not str(o.get("feedback", "")).strip():
+                    flags.append(f"{ADV}brief {where} q'{qid}' wrong option '{o.get('id')}' has no "
+                                 f"feedback (the platform shows it on a wrong pick)")
+            if not str(q.get("explanation", "")).strip():
+                flags.append(f"{ADV}brief {where} q'{qid}' has no explanation")
+    return flags
+
+
+def check_coding_challenges(b: dict, lid: str) -> list[str]:
+    """Validate a lesson brief's optional `coding_challenges` specs (references/academy-schema.md).
+    Structural only — file existence is checked by check_challenges when a course dir is given.
+    HARD: kebab unique id, language ∈ {rust,typescript}, buildType enum, starter/solution/tests refs."""
+    ccs = b.get("coding_challenges")
+    if ccs is None:
+        return []
+    if not isinstance(ccs, list):
+        return [f"{HARD}brief {lid} coding_challenges must be a list"]
+    flags: list[str] = []
+    seen: set[str] = set()
+    for ci, cc in enumerate(ccs):
+        cc = cc or {}
+        cid = str(cc.get("id", "")).strip()
+        where = f"{lid} coding_challenges[{cid or ci}]"
+        if not cid:
+            flags.append(f"{HARD}brief {where} missing id")
+        elif not ID_RE.match(cid):
+            flags.append(f"{HARD}brief {where} id not kebab-case (it becomes an exercise dir name)")
+        elif cid in seen:
+            flags.append(f"{HARD}brief {where} duplicate challenge id")
+        seen.add(cid)
+        lang = cc.get("language")
+        if lang not in CHALLENGE_LANGS:
+            flags.append(f"{HARD}brief {where} language must be one of {sorted(CHALLENGE_LANGS)} "
+                         f"(the Academy runner compiles only these): {lang!r}")
+        bt = cc.get("buildType", "standard")
+        if bt not in CHALLENGE_BUILD_TYPES:
+            flags.append(f"{HARD}brief {where} buildType not in {sorted(CHALLENGE_BUILD_TYPES)}: {bt!r}")
+        if bt == "buildable" and lang != "rust":
+            flags.append(f"{ADV}brief {where} buildType 'buildable' is the Rust/Anchor mode; "
+                         f"language is {lang!r}")
+        for k in ("starter", "solution", "tests"):
+            if not str(cc.get(k, "")).strip():
+                flags.append(f"{HARD}brief {where} missing {k} file reference")
+        if not cc.get("acceptance_criteria"):
+            flags.append(f"{ADV}brief {where} has no acceptance_criteria")
+    return flags
+
+
 # ── briefs ──────────────────────────────────────────────────────────────────────
 
 def check_briefs(m: dict) -> dict:
@@ -193,6 +289,10 @@ def check_briefs(m: dict) -> dict:
             flags.append(f"{ADV}brief {lid} est_length target ~{target}w is short for a course "
                          f"lesson — the writer writes to this number; course lessons run "
                          f"~{LESSON_TARGET_MIN}-4500w (forms/course.md). Raise the target.")
+
+        # Optional Academy plugins (additive): validate their specs if present.
+        flags += check_quiz_blocks(b, lid)
+        flags += check_coding_challenges(b, lid)
     return _result("briefs", flags)
 
 
@@ -615,6 +715,51 @@ def check_artifacts(m: dict) -> dict:
     return _result("artifacts", flags)
 
 
+def check_challenges(course_dir, m: dict | None = None) -> dict:
+    """Course-dir check (like check_drafts): every coding_challenge's starter/solution/tests
+    file referenced by a brief must exist on disk, and tests.json must be a non-empty array of
+    cases carrying an id + expectedOutput. Mirrors the Academy 'files must be present' +
+    executable-tests rules (references/academy-schema.md). File existence needs the tree, so it
+    lives here rather than in check_briefs (which is manifest-only)."""
+    import json as _json
+    from pathlib import Path as _P
+    root = _P(course_dir)
+    if m is None:
+        try:
+            m = load_manifest(course_dir)
+        except SystemExit:
+            return _result("challenges", ["ok: no manifest to resolve challenge files"])
+    flags: list[str] = []
+    n_seen = 0
+    for l in m.get("lessons", []):
+        lid = l.get("id", "?")
+        for cc in (l.get("brief", {}) or {}).get("coding_challenges", []) or []:
+            cc = cc or {}
+            cid = cc.get("id", "?")
+            n_seen += 1
+            for k in ("starter", "solution", "tests"):
+                rel = str(cc.get(k, "")).strip()
+                if not rel:
+                    continue  # missing ref already HARD in check_coding_challenges
+                p = root / rel
+                if not p.is_file():
+                    flags.append(f"{HARD}challenge {lid}/{cid}: {k} file not found: {rel}")
+                elif k == "tests":
+                    try:
+                        data = _json.loads(p.read_text("utf-8"))
+                    except Exception as e:
+                        flags.append(f"{HARD}challenge {lid}/{cid}: tests.json is not valid JSON ({e})")
+                        continue
+                    if not isinstance(data, list) or not data:
+                        flags.append(f"{HARD}challenge {lid}/{cid}: tests.json must be a non-empty array")
+                    elif any(("id" not in t or "expectedOutput" not in t) for t in data):
+                        flags.append(f"{HARD}challenge {lid}/{cid}: every test case needs id + expectedOutput")
+    if not flags:
+        return _result("challenges", [f"ok: {n_seen} coding challenge(s), all files present" if n_seen
+                                      else "ok: no coding challenges"])
+    return _result("challenges", flags)
+
+
 CHECKS = {"dag": check_dag, "briefs": check_briefs, "ladder": check_ladder,
           "capstone": check_capstone, "outcomes": check_outcomes,
           "research": check_research, "artifacts": check_artifacts, "length": check_length}
@@ -852,6 +997,57 @@ def selftest() -> int:
 
     # (cover is index-only; no course.overview narrative is rendered or required)
 
+    # ── academy plugins: quiz_blocks + coding_challenges (optional, additive) ──
+    # a good quiz block keeps briefs clean
+    qg = _good_manifest()
+    qg["lessons"][0]["brief"]["quiz_blocks"] = [{"questions": [
+        {"id": "q1", "prompt": "Base unit of SOL?", "multiSelect": False,
+         "options": [{"id": "a", "label": "Lamport", "correct": True},
+                     {"id": "b", "label": "Gwei", "correct": False, "feedback": "Ethereum's."}],
+         "explanation": "One SOL is 1e9 lamports."}]}]
+    check(not check_briefs(qg)["hard"], "good quiz_blocks -> briefs clean")
+    # single-select with two correct is HARD
+    q2 = copy.deepcopy(qg)
+    q2["lessons"][0]["brief"]["quiz_blocks"][0]["questions"][0]["options"][1]["correct"] = True
+    check(any("exactly one correct" in f for f in check_briefs(q2)["flags"]),
+          "single-select with two correct -> briefs HARD")
+    # a missing option id is HARD (correctness keyed to id)
+    q3 = copy.deepcopy(qg)
+    q3["lessons"][0]["brief"]["quiz_blocks"][0]["questions"][0]["options"][0].pop("id")
+    check(check_briefs(q3)["hard"], "quiz option with no id -> briefs HARD")
+
+    # a good coding_challenge SPEC keeps briefs clean (file existence checked separately)
+    cg2 = _good_manifest()
+    cg2["lessons"][0]["brief"]["coding_challenges"] = [{
+        "id": "add-two", "language": "rust", "buildType": "standard",
+        "starter": "lessons/challenges/the-counter/add-two/starter.rs",
+        "solution": "lessons/challenges/the-counter/add-two/solution.rs",
+        "tests": "lessons/challenges/the-counter/add-two/tests.json",
+        "acceptance_criteria": ["adds two ints"]}]
+    check(not check_briefs(cg2)["hard"], "good coding_challenge spec -> briefs clean")
+    # bad language is HARD
+    cb = copy.deepcopy(cg2)
+    cb["lessons"][0]["brief"]["coding_challenges"][0]["language"] = "python"
+    check(any("language must be one of" in f for f in check_briefs(cb)["flags"]),
+          "coding_challenge language not rust/typescript -> briefs HARD")
+
+    # check_challenges: missing files HARD, present files clean
+    with tempfile.TemporaryDirectory() as td2:
+        root = _P(td2)
+        # manifest with one challenge referencing files under the course dir
+        cm = _good_manifest()
+        cm["lessons"][0]["brief"]["coding_challenges"] = cg2["lessons"][0]["brief"]["coding_challenges"]
+        check(check_challenges(td2, cm)["hard"], "challenge with missing files -> challenges HARD")
+        exdir = root / "lessons" / "challenges" / "the-counter" / "add-two"
+        exdir.mkdir(parents=True)
+        (exdir / "starter.rs").write_text("fn add(a:i64,b:i64)->i64{0}\n", "utf-8")
+        (exdir / "solution.rs").write_text("fn add(a:i64,b:i64)->i64{a+b}\n", "utf-8")
+        (exdir / "tests.json").write_text('[{"id":"t1","input":"2, 3","expectedOutput":"5"}]', "utf-8")
+        check(not check_challenges(td2, cm)["hard"], "challenge with present files -> challenges clean")
+        # a tests.json that isn't a non-empty array is HARD
+        (exdir / "tests.json").write_text('[]', "utf-8")
+        check(check_challenges(td2, cm)["hard"], "empty tests.json array -> challenges HARD")
+
     print("\n" + ("VALIDATOR SELFTESTS PASSED" if ok else "FAILURES ABOVE"))
     return 0 if ok else 1
 
@@ -860,7 +1056,7 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="content-gen validator")
     ap.add_argument("--selftest", action="store_true")
     sub = ap.add_subparsers(dest="cmd")
-    for name in list(CHECKS) + ["drafts", "all"]:
+    for name in list(CHECKS) + ["drafts", "challenges", "all"]:
         p = sub.add_parser(name)
         p.add_argument("--course", help="course directory (reads manifest.json)")
         p.add_argument("--manifest", help="manifest.json path")
@@ -875,14 +1071,19 @@ def main(argv=None) -> int:
         print("course: pass --course <dir> or --manifest <file>", file=sys.stderr)
         return 2
     m = load_manifest(src)
-    names = list(CHECKS) if a.cmd == "all" else ([] if a.cmd == "drafts" else [a.cmd])
+    names = list(CHECKS) if a.cmd == "all" else ([] if a.cmd in ("drafts", "challenges") else [a.cmd])
     any_hard = False
     for n in names:
         res = CHECKS[n](m)
         _print(res)
         any_hard = any_hard or res["hard"]
-    if a.cmd in ("drafts", "all") and getattr(a, "course", None):
-        res = check_drafts(a.course, m)
+    course_dir = getattr(a, "course", None)
+    if course_dir and a.cmd in ("drafts", "all"):
+        res = check_drafts(course_dir, m)
+        _print(res)
+        any_hard = any_hard or res["hard"]
+    if course_dir and a.cmd in ("challenges", "all"):
+        res = check_challenges(course_dir, m)
         _print(res)
         any_hard = any_hard or res["hard"]
     print(f"\nGATE: {'FAIL (hard)' if any_hard else 'PASS'}")

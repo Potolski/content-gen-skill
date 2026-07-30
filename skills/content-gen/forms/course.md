@@ -195,6 +195,12 @@ voice/facts gates do NOT catch these. Before a course is "done":
 - **Every lesson shows its setup/install** for any tool it invokes (advisory gate added:
   `validate_course.py drafts` flags a tool used with no install step). Match it to the
   stated prerequisite.
+- **Interactive coding challenges carry their own harder gate.** If a lesson brief adds a
+  `coding_challenge` (Rust/TS only), the starter MUST fail its `tests.json` and the solution
+  MUST pass — that contract is the grade. Prove it with `tools/verify_challenges.py
+  content/courses/<id>` before publish (it is what the Academy platform runs for TypeScript on
+  every PR). Author the challenge's solution from code that already verifies (reuse the course's
+  `verify-anchor`/`verify-ts` harnesses), so the solution is real, not plausible.
 - **Lesson code ↔ shipped code ↔ recap ↔ hook must agree** — reconcile them (round 2 found
   an `increment`/`initialize` desync and an account-model mismatch between two lessons).
 - **A tool built in one lesson must be CALLED with that same interface in every later lesson.**

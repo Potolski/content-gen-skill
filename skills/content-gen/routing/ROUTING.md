@@ -152,3 +152,12 @@ and the economics-vs-derivation tiebreaker. `client-integration` lessons are usu
 
 > After routing, **validate empirically**: run a handful of real course topics through this procedure and
 > check for the failure modes in §6 (see `../references/quality-bar.md`).
+
+## Interactive plugins are threads, never backbones
+Quizzes (`quiz_blocks`) and coding challenges (`coding_challenges`) are the Academy platform plugins
+(lesson-brief-schema §H). Like testing-thread, they **thread through** whatever lesson template is routed —
+they are never a backbone or a routing decision. Rules of thumb: a quiz fits **any** lesson (add one after
+the overview/lab as a formative check); a coding challenge fits only lessons whose real code is **Rust or
+TypeScript** Solana code (the runner compiles only those) — Bitcoin/CLI/EVM/Python lessons take quizzes
+only. Security-epoch lessons pair naturally with exploit-first coding challenges; concept-spine lessons lean
+on quizzes for retrieval. Neither ever gates the lesson (design-spine §6.1).

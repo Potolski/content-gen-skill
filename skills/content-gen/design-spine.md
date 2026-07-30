@@ -87,6 +87,20 @@ self-assessment + provided solution → auto-graded tests → on-chain cryptogra
 capstone build → completion NFT / certificate. **Completion is gated on producing something**, never on
 finishing the videos. Provide solutions "as a resource, not a crutch."
 
+### 6.1 Formative checkpoints — quizzes check, they don't gate
+A lesson's *terminal* proof is `assessment` (a build or retrieval the learner must complete). **Formative**
+checks — the optional `quiz_blocks` and `coding_challenges` in a brief (lesson-brief-schema §H) — sit
+*inside* the lesson and give immediate feedback; they never gate passing. Guidance:
+- **Quizzes** verify understanding with per-option feedback and an explanation; put them after the
+  overview (concept check) and/or after the lab (readiness check). Language-agnostic — even a Bitcoin or
+  CLI lesson earns one. They award no gate.
+- **Coding challenges** are runnable, RUST/TYPESCRIPT-only exercises whose grade IS the test run: the
+  starter must fail, the solution must pass (`tools/verify_challenges.py` proves it). Use them where the
+  lesson's real code is Solana TS or a Rust/Anchor program; a base challenge can double as the lesson's
+  `assessment`, extra ones are labelled bonus and never required.
+- These are the **Academy platform plugins** (`references/academy-schema.md`); `tools/academy_export.py`
+  materializes them. They are **additive** — a lesson without them is unchanged.
+
 ## 7. Name the trade-off — on every design choice (the credibility engine, and the voice bridge)
 Every concept the course teaches has a cost, a limit, or a "when not to use it." **Surface it.** This is
 both good engineering pedagogy *and* the exact hook Kaue's voice spine needs ("always name the

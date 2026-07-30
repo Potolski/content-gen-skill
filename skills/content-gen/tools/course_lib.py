@@ -62,6 +62,13 @@ BRIEF_REQUIRED_KEYS = BRIEF_CORE_KEYS + BRIEF_BUILD_KEYS  # the build profile (b
 # Bloom verbs that signal a measurable objective; "know/understand/learn" do not.
 WEAK_BLOOM_VERBS = {"know", "understand", "learn", "be aware", "appreciate", "grasp"}
 
+# Academy publish-schema vocab (references/academy-schema.md). The two interactive
+# plugins content-gen can emit as first-class Academy blocks are OPTIONAL on a lesson
+# brief (`quiz_blocks`, `coding_challenges`); when present they must satisfy these
+# closed sets. Mirrors academy-courses schema/lesson.schema.json.
+CHALLENGE_LANGS = {"rust", "typescript"}            # the Academy code runner compiles ONLY these
+CHALLENGE_BUILD_TYPES = {"standard", "buildable"}   # code.buildType enum (deployable is a separate bool)
+
 # Strings in an `assessment` field that mean "watch/read", i.e. NOT gated on doing.
 PASSIVE_ASSESSMENT_RE = re.compile(
     r"\b(watch|read|review the video|listen|observe)\b", re.I
@@ -331,6 +338,8 @@ def selftest() -> int:
     check("derive-why" in DOMINANT_JOBS and "frame" in GUEST_ONLY_JOBS, "vocab loaded")
     check(ARTIFACT_LADDER.index("counter") < ARTIFACT_LADDER.index("capstone"),
           "artifact ladder ordered")
+    check(CHALLENGE_LANGS == {"rust", "typescript"} and "buildable" in CHALLENGE_BUILD_TYPES,
+          "academy challenge vocab loaded")
 
     print("\n" + ("COURSE_LIB SELFTESTS PASSED" if ok else "FAILURES ABOVE"))
     return 0 if ok else 1

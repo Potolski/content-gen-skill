@@ -98,6 +98,17 @@ whether it MUST ground against live sources.
     (Scope & deliverable above), one lesson at a time; run the visual pass on each
     draft; update `_state.yaml`. In `brief-only` mode, stop after the handoff
     packet and note the human accuracy gate.
+13. **(Optional) Interactive plugins + Academy publish.** For platform-bound courses, author
+    per-lesson `quiz_blocks` and (Rust/TS lessons) `coding_challenges` in the manifest briefs
+    (lesson-brief-schema §H), then project to the Academy publish tree and prove the challenge
+    contract:
+    ```bash
+    python3 "$SKILL/tools/validate_course.py" all --course content/courses/<id>   # runs quiz+challenge checks
+    python3 "$SKILL/tools/academy_export.py" emit --course content/courses/<id> --out content/academy/courses/<slug>
+    python3 "$SKILL/tools/verify_challenges.py" content/courses/<id>              # starter fails / solution passes
+    ```
+    Additive: the export writes only under `content/academy/`; the source course is untouched.
+    Contract + schema in `references/academy-schema.md`.
 
 ## What you load when (keep context lean)
 
@@ -154,6 +165,16 @@ python3 "$SKILL/tools/scaffold_course.py" emit --manifest m.json --out content/c
   that pairs with the fresh-eyes visual pass in `references/visual-review.md`. Deterministic, no
   browser; SKIP if WeasyPrint/rasterizer absent. Additive — the ` ```visual ` spec stays in the
   markdown; the PNG is written beside the lesson.
+- `tools/academy_export.py` — the **optional Academy publish projection**: `emit --course
+  content/courses/<id> --out content/academy/courses/<slug>` materializes the platform's YAML
+  block tree (`course.yaml` + per-lesson `lesson.yaml` with prose/quiz/code blocks + copied
+  challenge files) from the manifest, drafts, and brief `quiz_blocks`/`coding_challenges`.
+  One-way and additive — reads the course read-only, writes only under `--out`
+  (`references/academy-schema.md`).
+- `tools/verify_challenges.py` — proves the **Academy runtime contract** for every
+  `coding_challenge`: the solution passes all `tests.json` cases and the starter fails ≥1, in a
+  real toolchain (tsc+node for TypeScript; rustc / `cargo check` vs anchor-lang for Rust). FAIL =
+  a real contract violation; SKIP = toolchain unavailable (never a pass).
 - Stdlib-only, each with `--selftest`. The deterministic gate applies to the
   **course** form; other forms gate on their form-file checklist — but `verify_code.py`
   runs on every form, because any piece can ship code.

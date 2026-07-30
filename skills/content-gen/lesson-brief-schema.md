@@ -83,6 +83,30 @@ lesson:
     forward_hook:        # the cliffhanger/promise that closes the lesson and opens the next
   color:                 # 1-3 grounded trivia/history beats to weave in (named incidents, dated numbers) — never invented
   est_length:            # THE length contract — the writer writes to this number. Course lessons: ~3000-4500w (keystone topics higher). Validator flags targets below 3000.
+  # ── OPTIONAL Academy plugins (additive; see §H and references/academy-schema.md) ──
+  quiz_blocks:           # OPTIONAL: formative checks. A list of Academy quiz BLOCKS (each becomes one `type: quiz` block on export). Never gates the lesson.
+    - key:               #   kebab block key (e.g. check). Optional; defaults to check / check-N.
+      questions:
+        - id:            #   stable; correctness is keyed to this id, never option order
+          prompt:
+          multiSelect:   #   default false → exactly ONE correct option; true → ≥1
+          options:       #   ≥2; each {id, label, correct}; put `feedback` on every WRONG option
+            - {id: a, label: "...", correct: true}
+            - {id: b, label: "...", correct: false, feedback: "why it's wrong"}
+          explanation:   #   shown after answering — the paragraph that teaches the point
+  coding_challenges:     # OPTIONAL: runnable exercises. Only for rust|typescript (the Academy runner compiles ONLY these). Bitcoin/CLI/Python/Solidity lessons take quizzes, not code blocks.
+    - id:                #   kebab; becomes the exercise dir name on export
+      language:          #   rust | typescript
+      buildType:         #   standard (default) | buildable (Rust/Anchor compile-check with a hidden `mod verify` harness)
+      title:             #   optional learner-facing title
+      prompt:            #   optional what-to-do (the writer expands it; the file comments carry the real spec)
+      starter:           #   course-relative path — e.g. lessons/challenges/<lesson-id>/<challenge-id>/starter.rs
+      solution:          #   course-relative path (the reference; starter MUST fail its tests, solution MUST pass)
+      tests:             #   course-relative path to tests.json ([{id,input,expectedOutput,description?}])
+      hints: []          #   optional
+      acceptance_criteria: []   # what "done" means (feeds the writer + validated non-empty)
+      difficulty:        #   1-3
+      bloom:             #   the Bloom verb the challenge exercises
 ```
 
 ---
@@ -193,3 +217,24 @@ course lesson consistent when they pass through the same voice.
 - **`flow.recap` is honest.** It calls back only what the previous lesson genuinely did or
   built. A recap that invents a prior experience breaks the spine; the writer must open on
   the real previous artifact/step.
+
+
+## H. Academy plugins — quizzes & coding challenges (optional, additive)
+
+`quiz_blocks` and `coding_challenges` are the two **interactive plugins** the Superteam Academy
+platform runs (`references/academy-schema.md`). They are OPTIONAL — a brief without them is unchanged,
+and adding them never rewrites existing lessons. `tools/academy_export.py` projects them into a
+publishable Academy course; `tools/validate_course.py` validates the specs (`check_briefs` +
+`check_challenges`); `tools/verify_challenges.py` proves the runtime contract.
+
+- **Quizzes are formative — they never gate.** Only `assessment` gates the lesson (design-spine §6/§6.1).
+  A quiz checks understanding and gives immediate per-option feedback. `multiSelect:false` ⇒ exactly one
+  `correct`; put `feedback` on every wrong option and a teaching `explanation` on every question. Quizzes
+  are language-agnostic — a Bitcoin, EVM, or CLI lesson still earns one.
+- **Coding challenges are runnable and RUST/TYPESCRIPT ONLY** (the Academy sandbox compiles only these).
+  Author them where the lesson's real code is client-side Solana TS or a Rust/Anchor program. The **starter
+  must fail** its tests and the **solution must pass** — that contract is the grade, so keep the solution
+  the real, working code. The challenge code lives in FILES under `lessons/challenges/<lesson-id>/
+  <challenge-id>/` (starter/solution + tests.json); the brief only points at them. Three test modes exist —
+  TS (boolean expression over `result = fn(input)`), Rust `standard` (value compare), and Rust `buildable`
+  (compiles ⇒ pass, enforced by a hidden `mod verify` harness). See `references/academy-schema.md`.
