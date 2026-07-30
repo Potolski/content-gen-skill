@@ -57,6 +57,14 @@ def _slug(s: str) -> str:
 # wrapper AND its nested blob <div>s (and any orphans from older runs), so re-decorate
 # fully replaces it — a `</div>`-only match would stop at the first blob and leak the rest.
 _DECOR_RE = re.compile(r'<div class="stbr-decor".*?(?=<div class="viz")', re.DOTALL)
+# The scaffold embeds the block spec in an HTML comment after <body>. If the spec's data
+# holds "-->" (ASCII arrows), that comment closes early and the tail leaks as visible text.
+# Strip the whole spec comment before rendering (source of truth is the draft's ```visual).
+_SPEC_COMMENT_RE = re.compile(r'(<body>)\s*<!--.*?(?=<div class="(?:stbr-decor|viz)")', re.DOTALL)
+
+
+def _strip_spec(html: str) -> str:
+    return _SPEC_COMMENT_RE.sub(r"\1\n", html, count=1)
 
 
 def _radius(rng) -> str:
@@ -221,11 +229,13 @@ def cmd_scaffold(course_dir: Path) -> int:
         if it["html"].exists() and it["html"].read_text("utf-8").count("TODO(render)") == 0:
             kept += 1                                    # already filled by the agent, don't clobber
             continue
+        def sc(v):                                       # keep "-->" out of the spec comment
+            return str(v).replace("-->", "->")
         it["html"].write_text(_STARTER.format(
             css=_rel(it["html"], local_css), render_css=_rel(it["html"], local_render),
             decor=_decor(it["asset_id"]), w=CANVAS[0], h=CANVAS[1],
-            type=it["type"], title=it["title"],
-            purpose=it["purpose"], data=it["data"], prompt=it["prompt"]))
+            type=sc(it["type"]), title=sc(it["title"]),
+            purpose=sc(it["purpose"]), data=sc(it["data"]), prompt=sc(it["prompt"])))
         written += 1
     print(f"scaffold: {written} starter(s) written, {kept} filled asset(s) kept "
           f"({len(items)} visual blocks total) -> {assets}")
@@ -296,8 +306,11 @@ def cmd_render(course_dir: Path, dpi: int, only: str | None) -> int:
     skipped = len(items) - len(todo)
     ok = fail = 0
     for it in todo:
-        r = subprocess.run(["weasyprint", str(it["html"]), str(it["pdf"])],
+        tmp = it["html"].parent / (it["html"].stem + ".__render.html")   # spec-comment stripped
+        tmp.write_text(_strip_spec(it["html"].read_text("utf-8")))
+        r = subprocess.run(["weasyprint", str(tmp), str(it["pdf"])],
                            capture_output=True, text=True)
+        tmp.unlink(missing_ok=True)
         if r.returncode != 0 or not it["pdf"].exists():
             fail += 1
             print(f"  FAIL {it['asset_id']}: {(r.stderr or 'weasyprint error').strip().splitlines()[-1][:80]}")

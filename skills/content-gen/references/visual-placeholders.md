@@ -68,3 +68,18 @@ per-form defaults:
    never invent numbers for a chart that the research pass didn't freeze.
 
 Extraction for downstream tooling: `grep -n '^```visual' piece.md` finds every block.
+
+## Render pass (optional, downstream)
+
+This pass ships **specs**. An optional downstream **render pass** turns each ` ```visual ` spec
+into an on-brand PNG — see `references/visual-rendering.md` and `tools/render_visuals.py`.
+Division of labor: the block's `data` + structural `prompt` are the **content**; the shipped
+brand core (`brand/styles.css` + `brand/render.css`) is the **style** — so `prompt` should
+describe structure/content and leave styling to the brand system (any older "dark background /
+monospace" hint is overridden by it). The pass is **opt-in** (needs `weasyprint` + a rasterizer)
+and **additive**: the ` ```visual ` spec stays in the markdown as the source of truth and for
+regeneration; the PNG is written beside the lesson under `lessons/assets/<lesson>/`.
+
+Pipeline: `render_visuals.py extract` (work-list) → `scaffold` (brand-linked HTML starters) →
+author each `.viz` per `visual-rendering.md` → `decorate` (unique per-asset border decoration) →
+`render` (WeasyPrint → PDF → PNG; the PDF is discarded) → `check` (rendered vs unrendered).

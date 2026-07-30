@@ -41,7 +41,9 @@ router** (`forms/FORMS.md`) that decides which pipeline runs at all.
   ladder only when the kit is absent); **(2) draft** — structure complete, every
   frozen fact placed; **(3) writer-style pass** produces the delivered text
   (mandatory when installed); **(4) visual-placeholder pass**; **(5) validators**
-  (this skill's gate + writer-style's facts/tells).
+  (this skill's gate + writer-style's facts/tells); **(6) optional render pass** —
+  `references/visual-rendering.md` turns the ` ```visual ` specs into on-brand PNGs
+  (opt-in; needs WeasyPrint + a rasterizer).
 
 ## Step 0 — route the form (always first)
 
@@ -144,6 +146,11 @@ python3 "$SKILL/tools/scaffold_course.py" emit --manifest m.json --out content/c
   that language needs the container (resolve with `--env docker`, never ship on SKIP).
   It is CI **tier 5** (`ci.py --tiers 5`). This is non-negotiable: **no piece that
   contains runnable code is "done" until `verify_code.py` is green on it.**
+- `tools/render_visuals.py` — the **optional render pass**: turns each ` ```visual ` spec
+  into an on-brand PNG via the shipped `brand/` core + WeasyPrint (`extract → scaffold →
+  author each `.viz` → decorate → render → check`). Deterministic, no browser; SKIP if
+  WeasyPrint/rasterizer absent. See `references/visual-rendering.md`. Additive — the
+  ` ```visual ` spec stays in the markdown; the PNG is written beside the lesson.
 - Stdlib-only, each with `--selftest`. The deterministic gate applies to the
   **course** form; other forms gate on their form-file checklist — but `verify_code.py`
   runs on every form, because any piece can ship code.

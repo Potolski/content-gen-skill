@@ -132,6 +132,9 @@ build|concept`); the deterministic gate and emission per `../SKILL.md` steps 11�
 - [ ] `000-cover.md` present and current (re-emit after manifest edits).
 - [ ] Opener lesson present (motivate + runnable micro-demos) and a conclusion lesson closes the arc.
 - [ ] Every draft carries ≥2 visual blocks (`validate_course.py drafts`).
+- [ ] (Optional) render the ` ```visual ` specs to on-brand PNGs — `tools/render_visuals.py`
+      per `../references/visual-rendering.md` (opt-in; needs WeasyPrint). Additive: the specs
+      stay in the drafts; PNGs land under `lessons/assets/`.
 - [ ] No lesson traceable 1:1 to a corpus exemplar — learned from, never copied.
 - [ ] Every lesson has `flow.recap` + `flow.forward_hook` and ≥1 grounded piece of color.
 - [ ] Lesson shell uniform across all lessons; fade stated explicitly.
