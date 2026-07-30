@@ -13,11 +13,15 @@ tested head-to-head it both *misses* real defects and *hallucinates* fake ones. 
 
 1. **Automated (deterministic)** — `render_visuals.py review <course>` flags, per card:
    - **overflow** — the render spans >1 page (content taller than the 1600×900 canvas);
+   - **within-page clip** — content taller than the ~756px safe area, which the *centered* page
+     clips silently while staying one page (a last row/line cut off with no bottom margin). Detected
+     by re-rendering the card top-aligned and counting pages — this is exactly how three clipped
+     tables/code panels slipped past the plain overflow gate and shipped;
    - **forbidden CSS** in the authored `.viz` (`box-shadow`, `background-image:url(`,
      `font-stretch`, `position:fixed`, `display:contents` — WeasyPrint ignores the last
      one, so a grid/flex child relying on it lands wrong).
-   `render` also FAILS any card whose PDF spans >1 page. This catches the overflow class 100% — it
-   cannot see internal overlaps, which is layer 2.
+   `render` also FAILS any card whose PDF spans >1 page. Together these catch the overflow +
+   clipped-edge classes; internal overlaps and misalignment still need layer 2.
 
 2. **Visual (independent reviewers VIEW every PNG)** — this is the layer that actually catches the
    internal defects (overlaps, misalignment, unanchored connectors, contrast) the static pass can't
@@ -46,10 +50,15 @@ A reviewer that just "looks and judges" is unreliable — tested head-to-head, a
 missed a missing-connector defect and, on a clean-ish card, failed it for defects that weren't there.
 Four things make the visual pass reliable; use all four.
 
-1. **Spec-grounded.** Give the reviewer the card's ` ```visual ` spec (type + data + prompt) — what
-   the card MUST contain. A "fresh" reviewer with no spec can't tell a Merkle tree is *missing its
-   connectors*; a spec-grounded one checks "the spec names six edges — are all six drawn and
-   touching?" Grounding kills the "looks fine" default.
+1. **Spec-grounded — on the `data`, NOT the prompt's styling words.** Give the reviewer what the card
+   MUST contain (the `data`: the nodes/edges/rows/series and their relationships). A reviewer with no
+   spec can't tell a Merkle tree is *missing its connectors*; a grounded one checks "the spec names
+   six edges — are all six drawn and touching?" **But strip the `prompt`'s styling directives first.**
+   The `prompt` often carries obsolete pre-brand instructions ("dark background, monospace, no icons")
+   that the brand system overrides — hand those to a reviewer and it flags every correctly-branded
+   card. (A whole 132-card run mass-failed "light background instead of dark" exactly this way.) Judge
+   structure and content against `data`; let the brand own the look, and never flag the cream page,
+   the fonts, or a decorative element the prompt merely suggested.
 2. **Map it out, don't judge holistically.** Make the reviewer first inventory the render like a
    scene graph — every box (position), every connector (its two endpoints + does it visibly TOUCH
    both, or fall short into empty space), every label/chip (inside its box? inside the canvas?) —
@@ -65,7 +74,13 @@ Four things make the visual pass reliable; use all four.
    consensus-to-fail — one catcher is enough). And view at fidelity: the ≤~1900px many-image cap
    puts a whole 1600×900 card near the detection floor for pixel-level gaps/overlaps, so have the
    reviewer **crop and zoom** the regions it is unsure about (connector endpoints, box edges)
-   instead of judging from the downscaled whole.
+   instead of judging from the downscaled whole. The thumbnail cuts both ways — reviewers also
+   *over*-flag from it: in one run, cards that fill ~96% of the canvas width were repeatedly called
+   "~50%, text too small" because short cell text and the off-canvas decoration blob read as the
+   card's edge. So for any judgment that is really a **measurement** — is the last row clipped, does
+   the content fill the width, does a line touch a box — trust a computed check (crop the exact edge
+   at full resolution, or measure the rendered content's bounding box) over an eyeballed estimate of
+   a thumbnail.
 
 Each reviewer outputs: `MAP` (the inventory) · `SPEC-CHECK` (each required element present+correct /
 missing / wrong) · `DEFECTS` (bullets or none) · `VERDICT` (PASS only if every spec element is

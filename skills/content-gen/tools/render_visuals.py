@@ -67,6 +67,14 @@ def _strip_spec(html: str) -> str:
     return _SPEC_COMMENT_RE.sub(r"\1\n", html, count=1)
 
 
+def _safe_area_html(html: str) -> str:
+    """Top-align the card instead of vertically centering it. Content taller than the ~756px safe
+    area (900px canvas − 2×72px padding) is clipped by the centered page yet stays ONE page — so
+    the page-count overflow check can't see it; top-aligned, that same overflow spills to a 2nd
+    page and becomes detectable. This is how a clipped last row/line slips past `render`."""
+    return _strip_spec(html).replace("align-items: center", "align-items: flex-start", 1)
+
+
 # CSS the authored `.viz` must never contain (WeasyPrint drops or mis-renders these).
 # display:contents is silently ignored — a grid/flex child relying on it lands wrong
 # (collapsed cells, a title shoved off the top); make every cell a real direct child.
@@ -102,6 +110,20 @@ def _render_pdf(it) -> tuple[bool, str]:
     r = subprocess.run(["weasyprint", str(tmp), str(it["pdf"])], capture_output=True, text=True)
     tmp.unlink(missing_ok=True)
     return (r.returncode == 0 and it["pdf"].exists()), (r.stderr or "").strip()
+
+
+def _safe_area_overflow(it) -> bool:
+    """True if the card's content is taller than the ~756px safe area — a within-page vertical clip
+    (the last row/line cut off) that the normal 1-page check misses because the card is centered.
+    Render top-aligned and count pages: >1 means the content overran the safe area."""
+    tmp = it["html"].parent / (it["html"].stem + ".__safe.html")
+    pdf = it["html"].parent / (it["html"].stem + ".__safe.pdf")
+    tmp.write_text(_safe_area_html(it["html"].read_text("utf-8")))
+    r = subprocess.run(["weasyprint", str(tmp), str(pdf)], capture_output=True, text=True)
+    tmp.unlink(missing_ok=True)
+    n = _pdf_pages(pdf) if (r.returncode == 0 and pdf.exists()) else 1
+    pdf.unlink(missing_ok=True)
+    return n > 1
 
 
 def _radius(rng) -> str:
@@ -367,10 +389,11 @@ def cmd_render(course_dir: Path, dpi: int, only: str | None) -> int:
 
 
 def cmd_review(course_dir: Path) -> int:
-    """Deterministic QA pass over authored cards: page-overflow + forbidden-CSS lint. This is
-    the automated backstop; it catches the overflow class 100%. Internal overlaps, misaligned
-    or out-of-bounds components, malformed borders, unanchored connectors, and low contrast are
-    NOT statically detectable — a reviewer must VIEW each PNG per references/visual-review.md."""
+    """Deterministic QA pass over authored cards: page-overflow, within-page clip (content taller
+    than the ~756px safe area — vertical centering hides it from the page count), and forbidden-CSS
+    lint. This is the automated backstop; it catches the overflow + clipped-edge classes. Internal
+    overlaps, misaligned or out-of-bounds components, malformed borders, unanchored connectors, and
+    low contrast are NOT statically detectable — a reviewer must VIEW each PNG per visual-review.md."""
     items = [it for it in work_list(course_dir)
              if it["html"].exists() and "TODO(render)" not in it["html"].read_text("utf-8")]
     have_wp = bool(shutil.which("weasyprint"))
@@ -390,6 +413,8 @@ def cmd_review(course_dir: Path) -> int:
                 it["pdf"].unlink(missing_ok=True)
                 if p > 1:
                     issues.append(f"overflow:{p}pages")
+                elif _safe_area_overflow(it):
+                    issues.append("clipped:content taller than the 756px safe area (last row/line cut)")
         if issues:
             flagged += 1
             print(f"  FLAG {it['asset_id']}: {', '.join(issues)}")
@@ -485,6 +510,9 @@ def selftest() -> int:
     dc_viz = '<a><div class="viz"><style>.g{display:contents}</style>hi</div>\n</body>'
     chk(any(b in _viz_inner(dc_viz) for b in _FORBIDDEN_CSS),
         "review lint flags display:contents (WeasyPrint ignores it → broken grid)")
+    chk("align-items: flex-start" in _safe_area_html('body { align-items: center; }')
+        and "align-items: center" not in _safe_area_html('body { align-items: center; }'),
+        "safe-area check top-aligns the card (center → flex-start; exposes within-page clipping)")
     print("RENDER_VISUALS SELFTESTS " + ("PASSED" if ok else "FAILED"))
     return 0 if ok else 1
 
