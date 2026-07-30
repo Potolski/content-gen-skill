@@ -38,7 +38,6 @@ from validate_course import _parse_visuals   # noqa: E402  (reuse the canonical 
 SKILL = HERE.parent                          # skills/content-gen
 BRAND_CSS = SKILL / "brand" / "styles.css"
 RENDER_CSS = SKILL / "brand" / "render.css"
-SHAPES_DIR = SKILL / "brand" / "assets" / "shapes"
 CANVAS = (1600, 900)
 
 
@@ -49,80 +48,63 @@ def _slug(s: str) -> str:
     return out.strip("-") or "x"
 
 
-# ---- brand "morph" decoration -------------------------------------------------
-# The 28 organic shapes are the brand's background vocabulary. Each visual gets a
-# UNIQUE arrangement, chosen deterministically from a hash of its asset_id so renders
-# stay reproducible (no Math.random / wall-clock). Content = the spec; this = the style.
-_SHAPES_CACHE: dict[str, tuple[str, str]] | None = None
-_DECOR_RE = re.compile(r'<div class="stbr-decor".*?</div>\s*', re.DOTALL)
+# ---- brand background decoration ---------------------------------------------
+# Each visual gets two brand-colour blobs bled off two different borders, drawn as CSS
+# border-radius shapes. A border-radius div FILLS its box, so a crop is always a solid,
+# smooth mound — unlike the SVG morphs, whose transparent padding cropped to invisible
+# slivers. Deterministic per asset_id so renders stay reproducible; content = the spec.
+# Matches the whole decor layer up to the `.viz` content that follows it. Spans the
+# wrapper AND its nested blob <div>s (and any orphans from older runs), so re-decorate
+# fully replaces it — a `</div>`-only match would stop at the first blob and leak the rest.
+_DECOR_RE = re.compile(r'<div class="stbr-decor".*?(?=<div class="viz")', re.DOTALL)
 
 
-def _shapes() -> dict[str, tuple[str, str]]:
-    """Load the morph SVGs once as {stem: (viewBox, inner_markup)}. The internal
-    <defs>/<style> and class/id/fill attrs are stripped so we can recolour via a
-    parent <g fill> (dodges the inline-SVG `.cls-1` collision + WeasyPrint quirks)."""
-    global _SHAPES_CACHE
-    if _SHAPES_CACHE is None:
-        out: dict[str, tuple[str, str]] = {}
-        for p in sorted(SHAPES_DIR.glob("morth-*.svg")):
-            raw = p.read_text("utf-8")
-            m = re.search(r'viewBox="([^"]+)"', raw)
-            vb = m.group(1) if m else "0 0 100 100"
-            body = raw[raw.index(">", raw.index("<svg")) + 1: raw.rindex("</svg>")]
-            body = re.sub(r"<defs>.*?</defs>", "", body, flags=re.DOTALL)
-            body = re.sub(r'\s(?:class|id|fill|style)="[^"]*"', "", body)
-            out[p.stem] = (vb, body.strip())
-        _SHAPES_CACHE = out
-    return _SHAPES_CACHE
+def _radius(rng) -> str:
+    """An organic, asymmetric border-radius: 8 values (4 horizontal / 4 vertical)."""
+    v = [rng.randint(35, 65) for _ in range(8)]
+    return f"{v[0]}% {v[1]}% {v[2]}% {v[3]}% / {v[4]}% {v[5]}% {v[6]}% {v[7]}%"
 
 
-def _blob(rng, shapes, corner, key, fill, d_lo, d_hi, op_lo, op_hi) -> str:
-    """One morph <svg>, bled off `corner`, with a random size/rotation/flip/opacity.
-    `d` is the target LONGEST side; the rendered width/height follow the shape's own
-    aspect ratio, and each corner offset is a fraction of THAT axis's size — so ~half
-    the shape always stays on the page whether it's tall-narrow, wide-short, or round."""
-    vb, body = shapes[key]
-    p = vb.split()
-    vbw, vbh = float(p[2]), float(p[3])
-    d = rng.randint(d_lo, d_hi)
-    w = round(vbw * d / max(vbw, vbh))
-    h = round(vbh * d / max(vbw, vbh))
-    # Bleed only a little: morphs don't fill their viewBox, so a big off-corner offset
-    # can push the FILLED mass off-page. Keeping ~78-90% on-page reliably shows the shape.
-    hx = -int(w * rng.uniform(0.10, 0.22))
-    hy = -int(h * rng.uniform(0.10, 0.22))
-    opacity = round(rng.uniform(op_lo, op_hi), 3)
-    rot = rng.choice([0, 15, -15, 25, -25, 180])      # small angles keep the footprint predictable
-    flip = " scaleX(-1)" if rng.random() < 0.5 else ""
-    pos = {"tr": f"top:{hy}px;right:{hx}px;", "br": f"bottom:{hy}px;right:{hx}px;",
-           "bl": f"bottom:{hy}px;left:{hx}px;", "tl": f"top:{hy}px;left:{hx}px;"}[corner]
-    style = f"width:{w}px;{pos}opacity:{opacity};transform:rotate({rot}deg){flip};"
-    return f'<svg viewBox="{vb}" style="{style}"><g fill="{fill}">{body}</g></svg>'
+# Fill opacity, eased off full saturation. Yellow reads much fainter than green on
+# cream (luminance-close), so it gets more to stay legible as the sparing accent.
+_GREEN_OPACITY = 0.50
+_YELLOW_OPACITY = 0.80
+
+
+def _fill_opacity(fill: str) -> float:
+    return _YELLOW_OPACITY if fill == "#ffd23f" else _GREEN_OPACITY
+
+
+def _blob(rng, corner, fill, opacity) -> str:
+    """One brand-colour CSS blob tucked into `corner` (tr / bl / br — the top-left is
+    skipped for the eyebrow + title), bleeding off BOTH edges of that corner. A
+    border-radius div FILLS its box, so the visible corner is always a solid, smooth
+    mound — no empty-padding slivers. Kept compact so it stays in the corner, clear of
+    the centre content. Sits behind content (z-index 0)."""
+    vis_x = rng.randint(205, 290)                       # visible width in the corner
+    vis_y = rng.randint(180, 265)                       # visible height in the corner
+    over = rng.randint(220, 340)                        # how much bleeds off each edge
+    xside = "right" if corner in ("tr", "br") else "left"
+    yside = "top" if corner == "tr" else "bottom"
+    pos = f"{yside}:-{over}px;{xside}:-{over}px;"
+    return (f'<div style="position:absolute;width:{vis_x + over}px;height:{vis_y + over}px;'
+            f'{pos}border-radius:{_radius(rng)};background:{fill};opacity:{opacity};"></div>')
 
 
 def _decor(asset_id: str) -> str:
-    """A unique <div class="stbr-decor"> layer for this asset. Base: two green blobs
-    on OPPOSITE corners (the diagonal frame that always reads), varied by which
-    diagonal / shapes / sizes / rotations / emerald-vs-green. Plus an occasional third
-    accent blob (may be yellow — safe because it's additive, never the sole element).
+    """A unique <div class="stbr-decor"> layer for this asset: two brand-colour blobs
+    bled off two DIFFERENT borders (edges, not just corners) as smooth mounds in the
+    margins, behind content. Varied per asset by edge / position / size / shape / fill.
     Deterministic from asset_id, so every visual is distinct yet reproducible."""
-    shapes = _shapes()
-    keys = sorted(shapes)
-    if len(keys) < 2:
-        return ""
     rng = random.Random(int(hashlib.sha256(asset_id.encode("utf-8")).hexdigest()[:16], 16))
-    diag = rng.choice([("tr", "bl"), ("tl", "br")])
-    greens = ["#008b4c", "#306c40"]
-    rng.shuffle(greens)
-    pool = rng.sample(keys, len(keys))                  # distinct shapes, shuffled
-    svgs = [_blob(rng, shapes, diag[0], pool[0], greens[0], 440, 620, 0.16, 0.22),
-            _blob(rng, shapes, diag[1], pool[1], greens[1], 440, 620, 0.16, 0.22)]
-    if rng.random() < 0.33 and len(keys) >= 3:          # occasional third accent
-        free = rng.choice([c for c in ("tr", "br", "bl", "tl") if c not in diag])
-        fill = rng.choice(["#008b4c", "#306c40", "#ffd23f"])
-        lo, hi = (0.19, 0.26) if fill == "#ffd23f" else (0.12, 0.17)
-        svgs.append(_blob(rng, shapes, free, pool[2], fill, 300, 430, lo, hi))
-    return '<div class="stbr-decor" aria-hidden="true">\n  ' + "\n  ".join(svgs) + "\n</div>\n"
+    corners = rng.sample(["tr", "bl", "br"], 2)          # two distinct corners; skip the top-left
+    colors = ["#008b4c", "#306c40"]                      # emerald + green by default
+    rng.shuffle(colors)
+    if rng.random() < 0.30:                              # yellow is the sparing accent
+        colors[rng.randrange(2)] = "#ffd23f"
+    blobs = [_blob(rng, corners[0], colors[0], _fill_opacity(colors[0])),
+             _blob(rng, corners[1], colors[1], _fill_opacity(colors[1]))]
+    return '<div class="stbr-decor" aria-hidden="true">\n  ' + "\n  ".join(blobs) + "\n</div>\n"
 
 
 def work_list(course_dir: Path):
@@ -274,6 +256,7 @@ def cmd_render(course_dir: Path, dpi: int, only: str | None) -> int:
             print(f"  FAIL {it['asset_id']}: {(r.stderr or 'weasyprint error').strip().splitlines()[-1][:80]}")
             continue
         rok, how = _rasterize(it["pdf"], it["png"], dpi)
+        it["pdf"].unlink(missing_ok=True)              # PDF is a throwaway intermediate; keep only .png (+ .html)
         if rok:
             ok += 1
         else:
@@ -337,13 +320,19 @@ def selftest() -> int:
     starter = items[0]["html"].read_text("utf-8")
     chk("TODO(render)" in starter and "_brand.css" in starter and "1600px 900px" in starter,
         "scaffold writes a brand-linked, canvas-sized starter")
-    chk("_render.css" in starter and 'class="stbr-decor"' in starter and "<svg" in starter,
+    chk("_render.css" in starter and 'class="stbr-decor"' in starter and "border-radius" in starter,
         "scaffold bakes in the render layer + per-asset decoration")
     d1 = _decor("m01-l1-x/v01-flowchart")
-    chk('class="stbr-decor"' in d1 and d1.count("<svg") >= 2 and "morth" not in d1,
-        "_decor emits a 2+ blob morph frame (no filename leak)")
+    blobs = re.findall(r'<div style="([^"]+)"></div>', d1)
+    chk('class="stbr-decor"' in d1 and len(blobs) == 2, "_decor emits a 2-blob layer")
     chk(_decor("m01-l1-x/v01-flowchart") == d1, "_decor is deterministic per asset_id")
     chk(d1 != _decor("m01-l1-x/v07-table"), "_decor varies across assets")
+    chk(all("border-radius" in b and "position:absolute" in b for b in blobs),
+        "_decor blobs are CSS border-radius shapes (fill their box → always visible)")
+    chk(all(re.search(r'(?:top|bottom|left|right):-\d+px', b) for b in blobs),
+        "_decor blobs are each bled off a border (mound in the margin)")
+    chk(all(any(c in b for c in ("#008b4c", "#306c40", "#ffd23f")) for b in blobs),
+        "_decor blobs use only brand fills")
     cmd_decorate(d)
     redecor = items[0]["html"].read_text("utf-8")
     chk(redecor.count('class="stbr-decor"') == 1 and "_render.css" in redecor,
