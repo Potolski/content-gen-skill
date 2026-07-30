@@ -75,35 +75,82 @@ def _fill_opacity(fill: str) -> float:
     return _YELLOW_OPACITY if fill == "#ffd23f" else _GREEN_OPACITY
 
 
-def _blob(rng, corner, fill, opacity) -> str:
-    """One brand-colour CSS blob tucked into `corner` (tr / bl / br — the top-left is
-    skipped for the eyebrow + title), bleeding off BOTH edges of that corner. A
-    border-radius div FILLS its box, so the visible corner is always a solid, smooth
-    mound — no empty-padding slivers. Kept compact so it stays in the corner, clear of
-    the centre content. Sits behind content (z-index 0)."""
-    vis_x = rng.randint(205, 290)                       # visible width in the corner
-    vis_y = rng.randint(180, 265)                       # visible height in the corner
-    over = rng.randint(220, 340)                        # how much bleeds off each edge
-    xside = "right" if corner in ("tr", "br") else "left"
-    yside = "top" if corner == "tr" else "bottom"
-    pos = f"{yside}:-{over}px;{xside}:-{over}px;"
-    return (f'<div style="position:absolute;width:{vis_x + over}px;height:{vis_y + over}px;'
+# Border anchors on a coarse (col L/C/R, row T/M/B) grid. Corners bleed off BOTH edges;
+# edge-mids bleed off ONE and centre along it. Excluded: top-centre / top-left (eyebrow +
+# title) and dead-centre (content) — so every anchor stays clear of where content lives.
+_ANCHORS = {"tr": ("R", "T"), "br": ("R", "B"), "bl": ("L", "B"),
+            "bc": ("C", "B"), "lm": ("L", "M"), "rm": ("R", "M")}
+# A lone blob reads best in a corner; pairs go diagonally opposite (opposite on BOTH
+# axes, for balance); triples spread across rows and side columns.
+_SINGLES = ["tr", "br", "bl", "tr", "br", "bl", "rm", "bc"]
+_PAIRS = [("tr", "bl"), ("tr", "lm"), ("tr", "bc"), ("rm", "bl"), ("rm", "bc"), ("br", "lm")]
+# Triangles across three regions. Avoid pairing top-right (tr) with right-mid (rm) —
+# adjacent on the right edge, they merge into one blob rather than reading as two.
+_TRIPLES = [("tr", "lm", "bc"), ("tr", "bl", "br"), ("tr", "bl", "bc"), ("tr", "lm", "br")]
+
+
+def _density_n(html: str) -> int:
+    """Choose 1-3 blobs from the authored `.viz` text density: dense → 1 (keep a busy
+    slide calm), sparse → 3, most land at 2. Style/comments are stripped so only the
+    visible text counts."""
+    m = re.search(r'<div class="viz">(.*?)</div>\s*</body>', html, re.DOTALL)
+    viz = m.group(1) if m else ""
+    viz = re.sub(r"<style.*?</style>", "", viz, flags=re.DOTALL)
+    viz = re.sub(r"<!--.*?-->", "", viz, flags=re.DOTALL)
+    text_len = len(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", viz)).strip())
+    return 1 if text_len > 600 else 3 if text_len < 345 else 2
+
+
+def _blob(rng, anchor, fill, opacity) -> str:
+    """One brand-colour CSS blob bled off a border at `anchor`. A border-radius div FILLS
+    its box, so the visible part is always a solid, smooth mound — no empty-padding
+    slivers. Corner anchors bleed off both edges; edge-mids bleed off one and centre
+    along it. Kept compact, clear of the centre content, behind everything (z-index 0)."""
+    col, row = _ANCHORS[anchor]
+    over = rng.randint(220, 340)                         # how much bleeds off the border
+    if col in ("L", "R") and row in ("T", "B"):          # corner — bleed off both edges
+        w = rng.randint(205, 290) + over
+        h = rng.randint(180, 265) + over
+        xside = "right" if col == "R" else "left"
+        yside = "top" if row == "T" else "bottom"
+        pos = f"{yside}:-{over}px;{xside}:-{over}px;"
+    elif col == "C":                                     # bottom-centre — bleed off the horizontal edge
+        w = rng.randint(360, 540)                        # span along the edge
+        h = rng.randint(175, 250) + over
+        yside = "top" if row == "T" else "bottom"
+        left = round(CANVAS[0] * rng.uniform(0.36, 0.64) - w / 2)
+        pos = f"{yside}:-{over}px;left:{left}px;"
+    else:                                                # left/right-middle — bleed off the vertical edge
+        w = rng.randint(175, 250) + over
+        h = rng.randint(340, 520)                        # span along the edge
+        xside = "right" if col == "R" else "left"
+        top = round(CANVAS[1] * rng.uniform(0.34, 0.66) - h / 2)
+        pos = f"{xside}:-{over}px;top:{top}px;"
+    return (f'<div style="position:absolute;width:{w}px;height:{h}px;'
             f'{pos}border-radius:{_radius(rng)};background:{fill};opacity:{opacity};"></div>')
 
 
-def _decor(asset_id: str) -> str:
-    """A unique <div class="stbr-decor"> layer for this asset: two brand-colour blobs
-    bled off two DIFFERENT borders (edges, not just corners) as smooth mounds in the
-    margins, behind content. Varied per asset by edge / position / size / shape / fill.
-    Deterministic from asset_id, so every visual is distinct yet reproducible."""
+def _decor(asset_id: str, n: int = 2) -> str:
+    """A unique <div class="stbr-decor"> layer for this asset: `n` (1-3) brand-colour
+    blobs bled off the borders (corners AND edge-midpoints) as smooth mounds behind
+    content. n=2 places them diagonally opposite for balance; n=3 spreads them. Varied
+    per asset by anchor / position / size / shape / fill. Deterministic from asset_id."""
+    n = max(1, min(3, n))
     rng = random.Random(int(hashlib.sha256(asset_id.encode("utf-8")).hexdigest()[:16], 16))
-    corners = rng.sample(["tr", "bl", "br"], 2)          # two distinct corners; skip the top-left
+    if n == 1:
+        anchors = [rng.choice(_SINGLES)]
+    elif n == 2:
+        anchors = list(rng.choice(_PAIRS))               # opposite on both x and y (balance)
+    else:
+        anchors = list(rng.choice(_TRIPLES))             # spread across the borders
     colors = ["#008b4c", "#306c40"]                      # emerald + green by default
     rng.shuffle(colors)
+    while len(colors) < n:                               # extend for a 3rd blob
+        colors.append(rng.choice(("#008b4c", "#306c40")))
+    colors = colors[:n]
     if rng.random() < 0.30:                              # yellow is the sparing accent
-        colors[rng.randrange(2)] = "#ffd23f"
-    blobs = [_blob(rng, corners[0], colors[0], _fill_opacity(colors[0])),
-             _blob(rng, corners[1], colors[1], _fill_opacity(colors[1]))]
+        colors[rng.randrange(n)] = "#ffd23f"
+    blobs = [_blob(rng, a, c, _fill_opacity(c)) for a, c in zip(anchors, colors)]
     return '<div class="stbr-decor" aria-hidden="true">\n  ' + "\n  ".join(blobs) + "\n</div>\n"
 
 
@@ -203,12 +250,12 @@ def cmd_decorate(course_dir: Path) -> int:
             s = s.replace('<link rel="stylesheet" href="../_brand.css">',
                           '<link rel="stylesheet" href="../_brand.css">\n'
                           '<link rel="stylesheet" href="../_render.css">', 1)
-        block = _decor(it["asset_id"])
+        block = _decor(it["asset_id"], _density_n(s))    # 1-3 blobs by content density
         s = (_DECOR_RE.sub(block, s, count=1) if 'class="stbr-decor"' in s
              else s.replace('<div class="viz">', block + '<div class="viz">', 1))
         h.write_text(s)
         changed += 1
-    print(f"decorate: {changed} asset(s) given unique morph decoration -> {assets}")
+    print(f"decorate: {changed} asset(s) given unique border decoration -> {assets}")
     return 0
 
 
@@ -322,17 +369,24 @@ def selftest() -> int:
         "scaffold writes a brand-linked, canvas-sized starter")
     chk("_render.css" in starter and 'class="stbr-decor"' in starter and "border-radius" in starter,
         "scaffold bakes in the render layer + per-asset decoration")
-    d1 = _decor("m01-l1-x/v01-flowchart")
-    blobs = re.findall(r'<div style="([^"]+)"></div>', d1)
-    chk('class="stbr-decor"' in d1 and len(blobs) == 2, "_decor emits a 2-blob layer")
-    chk(_decor("m01-l1-x/v01-flowchart") == d1, "_decor is deterministic per asset_id")
-    chk(d1 != _decor("m01-l1-x/v07-table"), "_decor varies across assets")
-    chk(all("border-radius" in b and "position:absolute" in b for b in blobs),
-        "_decor blobs are CSS border-radius shapes (fill their box → always visible)")
-    chk(all(re.search(r'(?:top|bottom|left|right):-\d+px', b) for b in blobs),
-        "_decor blobs are each bled off a border (mound in the margin)")
-    chk(all(any(c in b for c in ("#008b4c", "#306c40", "#ffd23f")) for b in blobs),
-        "_decor blobs use only brand fills")
+    for nn in (1, 2, 3):
+        dec = _decor("m01-l1-x/v01-flowchart", nn)
+        b = re.findall(r'<div style="([^"]+)"></div>', dec)
+        chk('class="stbr-decor"' in dec and len(b) == nn, f"_decor(n={nn}) emits {nn} blob(s)")
+        chk(all("border-radius" in x and "position:absolute" in x for x in b),
+            f"_decor(n={nn}) blobs are CSS border-radius shapes (fill their box → visible)")
+        chk(all(re.search(r'(?:top|bottom|left|right):-\d+px', x) for x in b),
+            f"_decor(n={nn}) blobs are each bled off a border")
+        chk(all(any(c in x for c in ("#008b4c", "#306c40", "#ffd23f")) for x in b),
+            f"_decor(n={nn}) blobs use only brand fills")
+    d1 = _decor("m01-l1-x/v01-flowchart", 2)
+    chk(_decor("m01-l1-x/v01-flowchart", 2) == d1, "_decor is deterministic per (asset_id, n)")
+    chk(d1 != _decor("m01-l1-x/v07-table", 2), "_decor varies across assets")
+    chk(all(_ANCHORS[a][0] != _ANCHORS[b_][0] and _ANCHORS[a][1] != _ANCHORS[b_][1]
+            for a, b_ in _PAIRS), "2-blob pairs are opposite on both x and y (balanced)")
+    chk(_density_n('<div class="viz"><p>' + "x " * 400 + "</p></div>\n</body>") == 1
+        and _density_n('<div class="viz"><p>hi</p></div>\n</body>') == 3,
+        "_density_n: dense→1, sparse→3")
     cmd_decorate(d)
     redecor = items[0]["html"].read_text("utf-8")
     chk(redecor.count('class="stbr-decor"') == 1 and "_render.css" in redecor,
