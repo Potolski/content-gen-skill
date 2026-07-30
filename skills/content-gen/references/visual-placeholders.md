@@ -82,4 +82,6 @@ regeneration; the PNG is written beside the lesson under `lessons/assets/<lesson
 
 Pipeline: `render_visuals.py extract` (work-list) → `scaffold` (brand-linked HTML starters) →
 author each `.viz` per `visual-rendering.md` → `decorate` (unique per-asset border decoration) →
-`render` (WeasyPrint → PDF → PNG; the PDF is discarded) → `check` (rendered vs unrendered).
+`render` (WeasyPrint → PDF → PNG; the PDF is discarded) → **review** (`render_visuals.py review`
++ the fresh-eyes visual QA in `visual-rendering.md`'s companion `visual-review.md`; re-author any
+glitched card) → `check` (rendered vs unrendered). Not "done" until the review pass is clean.

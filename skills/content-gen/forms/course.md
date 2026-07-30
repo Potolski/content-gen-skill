@@ -135,6 +135,8 @@ build|concept`); the deterministic gate and emission per `../SKILL.md` steps 11�
 - [ ] (Optional) render the ` ```visual ` specs to on-brand PNGs — `tools/render_visuals.py`
       per `../references/visual-rendering.md` (opt-in; needs WeasyPrint). Additive: the specs
       stay in the drafts; PNGs land under `lessons/assets/`.
+- [ ] If rendered, the **review pass is clean** — `render_visuals.py review` + the fresh-eyes
+      visual QA in `../references/visual-review.md`; no card overflows, overlaps, or clips.
 - [ ] No lesson traceable 1:1 to a corpus exemplar — learned from, never copied.
 - [ ] Every lesson has `flow.recap` + `flow.forward_hook` and ≥1 grounded piece of color.
 - [ ] Lesson shell uniform across all lessons; fade stated explicitly.

@@ -67,6 +67,43 @@ def _strip_spec(html: str) -> str:
     return _SPEC_COMMENT_RE.sub(r"\1\n", html, count=1)
 
 
+# CSS the authored `.viz` must never contain (WeasyPrint drops or mis-renders these).
+# display:contents is silently ignored — a grid/flex child relying on it lands wrong
+# (collapsed cells, a title shoved off the top); make every cell a real direct child.
+_FORBIDDEN_CSS = ("box-shadow", "background-image:url(", "background-image: url(",
+                  "font-stretch", "position:fixed", "position: fixed",
+                  "display:contents", "display: contents")
+
+
+def _viz_inner(html: str) -> str:
+    """The authored `.viz` content (so lint checks the author's CSS, not the head/decor)."""
+    m = re.search(r'<div class="viz">(.*?)</div>\s*</body>', html, re.DOTALL)
+    return m.group(1) if m else ""
+
+
+def _pdf_pages(pdf: Path) -> int:
+    """Page count of a rendered PDF. WeasyPrint emits >1 page when the visual overflows the
+    1600x900 canvas — the single most reliable automated glitch signal."""
+    if shutil.which("pdfinfo"):
+        r = subprocess.run(["pdfinfo", str(pdf)], capture_output=True, text=True)
+        m = re.search(r"^Pages:\s*(\d+)", r.stdout, re.MULTILINE)
+        if m:
+            return int(m.group(1))
+    try:                                            # fallback: count Page objects in the raw PDF
+        return len(re.findall(rb"/Type\s*/Page[^s]", pdf.read_bytes())) or 1
+    except OSError:
+        return 1
+
+
+def _render_pdf(it) -> tuple[bool, str]:
+    """Render one asset's HTML (spec comment stripped) to its `.pdf`. Returns (ok, stderr)."""
+    tmp = it["html"].parent / (it["html"].stem + ".__render.html")
+    tmp.write_text(_strip_spec(it["html"].read_text("utf-8")))
+    r = subprocess.run(["weasyprint", str(tmp), str(it["pdf"])], capture_output=True, text=True)
+    tmp.unlink(missing_ok=True)
+    return (r.returncode == 0 and it["pdf"].exists()), (r.stderr or "").strip()
+
+
 def _radius(rng) -> str:
     """An organic, asymmetric border-radius: 8 values (4 horizontal / 4 vertical)."""
     v = [rng.randint(35, 65) for _ in range(8)]
@@ -306,14 +343,16 @@ def cmd_render(course_dir: Path, dpi: int, only: str | None) -> int:
     skipped = len(items) - len(todo)
     ok = fail = 0
     for it in todo:
-        tmp = it["html"].parent / (it["html"].stem + ".__render.html")   # spec-comment stripped
-        tmp.write_text(_strip_spec(it["html"].read_text("utf-8")))
-        r = subprocess.run(["weasyprint", str(tmp), str(it["pdf"])],
-                           capture_output=True, text=True)
-        tmp.unlink(missing_ok=True)
-        if r.returncode != 0 or not it["pdf"].exists():
+        ok_pdf, err = _render_pdf(it)
+        if not ok_pdf:
             fail += 1
-            print(f"  FAIL {it['asset_id']}: {(r.stderr or 'weasyprint error').strip().splitlines()[-1][:80]}")
+            print(f"  FAIL {it['asset_id']}: {(err.splitlines()[-1][:80] if err else 'weasyprint error')}")
+            continue
+        pages = _pdf_pages(it["pdf"])
+        if pages > 1:                                  # content overflowed the 1600x900 canvas
+            fail += 1
+            it["pdf"].unlink(missing_ok=True)
+            print(f"  FAIL {it['asset_id']}: overflow — spans {pages} pages (must fit one 1600x900 page)")
             continue
         rok, how = _rasterize(it["pdf"], it["png"], dpi)
         it["pdf"].unlink(missing_ok=True)              # PDF is a throwaway intermediate; keep only .png (+ .html)
@@ -325,6 +364,38 @@ def cmd_render(course_dir: Path, dpi: int, only: str | None) -> int:
     print(f"render: {ok} PNG · {fail} FAIL · {skipped} not-yet-authored (still a TODO starter) "
           f"[dpi={dpi}]")
     return 1 if fail else 0
+
+
+def cmd_review(course_dir: Path) -> int:
+    """Deterministic QA pass over authored cards: page-overflow + forbidden-CSS lint. This is
+    the automated backstop; it catches the overflow class 100%. Internal overlaps, misaligned
+    or out-of-bounds components, malformed borders, unanchored connectors, and low contrast are
+    NOT statically detectable — a reviewer must VIEW each PNG per references/visual-review.md."""
+    items = [it for it in work_list(course_dir)
+             if it["html"].exists() and "TODO(render)" not in it["html"].read_text("utf-8")]
+    have_wp = bool(shutil.which("weasyprint"))
+    if not have_wp:
+        print("review: weasyprint absent — running CSS lint only (no overflow check).", file=sys.stderr)
+    flagged = 0
+    for it in items:
+        issues = []
+        viz = _viz_inner(it["html"].read_text("utf-8"))
+        issues += [f"forbidden-css:{b}" for b in _FORBIDDEN_CSS if b in viz]
+        if have_wp:
+            ok_pdf, err = _render_pdf(it)
+            if not ok_pdf:
+                issues.append("render-error")
+            else:
+                p = _pdf_pages(it["pdf"])
+                it["pdf"].unlink(missing_ok=True)
+                if p > 1:
+                    issues.append(f"overflow:{p}pages")
+        if issues:
+            flagged += 1
+            print(f"  FLAG {it['asset_id']}: {', '.join(issues)}")
+    print(f"\nreview (static): {flagged}/{len(items)} card(s) flagged. Overlap / misalignment / "
+          f"out-of-bounds / contrast need the VISUAL pass — see references/visual-review.md.")
+    return 1 if flagged else 0
 
 
 def cmd_extract(course_dir: Path, file: str | None) -> int:
@@ -404,6 +475,16 @@ def selftest() -> int:
     redecor = items[0]["html"].read_text("utf-8")
     chk(redecor.count('class="stbr-decor"') == 1 and "_render.css" in redecor,
         "decorate keeps exactly one decor block + the render link")
+    bad_viz = '<a><div class="viz"><style>.x{box-shadow:0 0 5px}</style>hi</div>\n</body>'
+    good_viz = '<a><div class="viz"><style>.x{border:1px solid}</style>hi</div>\n</body>'
+    chk(_viz_inner(bad_viz).startswith("<style>") and _viz_inner(good_viz).startswith("<style>"),
+        "_viz_inner extracts the authored .viz content")
+    chk(any(b in _viz_inner(bad_viz) for b in _FORBIDDEN_CSS)
+        and not any(b in _viz_inner(good_viz) for b in _FORBIDDEN_CSS),
+        "review lint flags forbidden CSS (box-shadow), passes clean CSS")
+    dc_viz = '<a><div class="viz"><style>.g{display:contents}</style>hi</div>\n</body>'
+    chk(any(b in _viz_inner(dc_viz) for b in _FORBIDDEN_CSS),
+        "review lint flags display:contents (WeasyPrint ignores it → broken grid)")
     print("RENDER_VISUALS SELFTESTS " + ("PASSED" if ok else "FAILED"))
     return 0 if ok else 1
 
@@ -411,7 +492,7 @@ def selftest() -> int:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="render ```visual specs into on-brand images")
     ap.add_argument("cmd", nargs="?",
-                    choices=["extract", "scaffold", "decorate", "render", "check"])
+                    choices=["extract", "scaffold", "decorate", "render", "review", "check"])
     ap.add_argument("course", nargs="?")
     ap.add_argument("--file", help="extract from a single markdown file")
     ap.add_argument("--dpi", type=int, default=144, help="raster DPI (default 144 = 1.5x)")
@@ -431,6 +512,8 @@ def main(argv=None) -> int:
         return cmd_decorate(course)
     if a.cmd == "render":
         return cmd_render(course, a.dpi, a.only)
+    if a.cmd == "review":
+        return cmd_review(course)
     if a.cmd == "check":
         return cmd_check(course)
     ap.print_help()

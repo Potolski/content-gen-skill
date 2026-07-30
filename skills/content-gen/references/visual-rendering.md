@@ -12,7 +12,7 @@ render it through WeasyPrint. Load `../brand/brand-guide.md` (tokens + palette) 
 
 ## Two rules
 - **`data` + `prompt` drive CONTENT; the brand drives STYLE.** Render exactly the nodes/rows/series the `data` names, in the structure the `prompt` describes. Ignore any styling words in an old `prompt` ("dark background, monospace, no icons") — those predate the brand; the look comes from the tokens, not the prompt.
-- **WeasyPrint-safe CSS only.** OK: flexbox, grid, absolute positioning, borders, `border-radius`, `linear/radial-gradient`, `@font-face`, 2D transforms, inline `<svg>`. NOT OK (silently dropped or breaks reproducibility): `box-shadow`, `font-stretch`, `background-image: url()`, JavaScript, animation. Separate elements with borders / tint fills / full-bleed fields, never shadow.
+- **WeasyPrint-safe CSS only.** OK: flexbox, grid, absolute positioning, borders, `border-radius`, `linear/radial-gradient`, `@font-face`, 2D transforms, inline `<svg>`. NOT OK (silently dropped or breaks reproducibility): `box-shadow`, `font-stretch`, `background-image: url()`, JavaScript, animation, and **`display:contents`** (WeasyPrint ignores it, so a grid/flex child that relies on it lands in the wrong place — collapsed cells, a title pushed off the top). Make every grid/flex cell a real direct child instead. Separate elements with borders / tint fills / full-bleed fields, never shadow.
 
 ## House style (every visual)
 - Sits on the cream page; the content lives in a white card (`--surface-card`, `--radius-2xl`) OR a full-bleed emerald/dark field for a punchier one. Generous padding (`--space-7/8`).
@@ -35,3 +35,14 @@ Use **inline `<svg>`** for arrows/lines (a `<line>`/`<path>` in `--stbr-dark` or
 
 ## Fidelity check before render
 Every node/row/series in `data` appears; the one accent is the spec's actual point; contrast is legible; nothing relies on shadow; no `background-image`. Then `render`.
+
+## Fit & safety (avoid the common render glitches)
+WeasyPrint lays out flex / absolute / text differently than you assume — most glitches come from that gap. Build to these rules, then **render and actually LOOK** (structural checks are not enough; a fresh review pass follows — see `visual-review.md`):
+- **Fit ONE page.** The whole visual must fit the 1600×900 canvas — content is centred in `.viz` with 72px padding, so keep it inside ~1456×756. If a card spans a 2nd page, `render` FAILS it. Cut content or shrink type; never overflow.
+- **Keep off the edges.** Never full-bleed a row/box to `x=0`/`x=1600` or the top/bottom edge — leave margin. The ONLY thing that touches the canvas edges is the corner/border decoration (added behind content).
+- **No overlap.** Separate boxes with flex/grid `gap` or explicit spacing — never let two panels sit on top of each other, and don't absolutely-position a panel over another. Size rows to their content so nothing collides.
+- **Contain your chips.** Annotation chips, pills, and labels must fit inside their parent — give it enough width/height/padding; don't let a chip spill past the box edge.
+- **Anchor connectors.** An arrow/line must start and end ON the nodes it connects. Prefer laying nodes out with flex/grid and drawing short connectors between adjacent nodes; use one absolute full-size `<svg>` layer only when you compute endpoints from the real node positions. A line pointing at empty space is a glitch.
+- **Headings fit their box.** Give a heading its own line/height; a large title in a small panel overruns the body beneath it — reserve the space or shrink the heading.
+- **Distrust WeasyPrint's flex/grid sizing.** It sizes items differently than a browser and causes most glitches: a flex/grid row often stretches *taller* than its content (four "230px" rows silently blow past the 756px budget → 2-page overflow), and vertical centering can hide that clipping from your eye but not from the page-count check. Size rows to their content (compact fixed heights, not `1fr` stretch), give paired columns equal explicit box heights so their steps align, and re-render + LOOK after any flex/grid change.
+- **An inline `<svg>` connector layer needs explicit `width` + `height`**, not just a `viewBox` — without them WeasyPrint collapses it to a tiny artifact (a stray glyph in a corner) and none of your lines draw. Size the SVG to the node area and compute endpoints in that coordinate space so arrows land on real nodes.
