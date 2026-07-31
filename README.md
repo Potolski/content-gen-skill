@@ -111,6 +111,31 @@ VERIFY_HARNESS=1 python3 skills/content-gen/tools/ci.py --tiers 5             # 
 - **Wired into CI as tier 5** (`ci.py`) and documented as a hard step in
   `forms/course.md`. It applies to every form, because any form can ship code.
 
+## Academy quizzes, coding challenges & publishing
+
+Two optional, **additive** interactive plugins can enrich any course lesson, matching the
+Superteam Academy platform (`solanabr/academy-courses`) so a finished course can be published
+there. A lesson brief may carry:
+
+- **`quiz_blocks`** — formative multiple-choice checks with per-option feedback and an
+  explanation. Language-agnostic, and they never gate the lesson (`design-spine.md` §6.1).
+- **`coding_challenges`** — runnable **Rust/TypeScript** exercises (the platform runner compiles
+  only those two). The grade is the test run: the solution must pass every `tests.json` case and
+  the starter must fail at least one.
+
+```bash
+# validate the specs + that every challenge's starter/solution/tests file exists
+python3 skills/content-gen/tools/validate_course.py challenges --course content/courses/<id>
+# project the course into the Academy publish tree (course.yaml + per-lesson lesson.yaml blocks + files)
+python3 skills/content-gen/tools/academy_export.py emit --course content/courses/<id> --out content/academy/courses/<slug>
+# PROVE the contract in a real toolchain (tsc+node for TS; cargo check vs anchor-lang for buildable Rust)
+python3 skills/content-gen/tools/verify_challenges.py content/courses/<id>
+```
+
+The platform contract is pinned in `references/academy-schema.md`; authoring is documented in
+`lesson-brief-schema.md` §H. The export is one-way — it reads the course read-only and writes only
+under `content/academy/`, so the source course is never mutated.
+
 ## Quick start
 
 ```bash
@@ -132,7 +157,7 @@ Three worked, validator-green example courses ship under
 ## The deterministic gate (`validate_course.py`, course form)
 HARD = breaks the prerequisite-DAG walk or the writer handoff; ADVISORY = a smell
 to weigh. Subcommands: `dag` · `briefs` · `ladder` · `capstone` · `outcomes` ·
-`all`. Lessons carry `kind: build|concept` — concept lessons drop the build triad.
+`challenges` · `all`. Lessons carry `kind: build|concept` — concept lessons drop the build triad.
 There is intentionally **no "course score"**; pedagogical quality is a human/agent
 judgement (`references/quality-bar.md`). Non-course forms gate on their form-file
 checklist.
@@ -145,7 +170,7 @@ forms-corpus/                 8 content forms analyzed (PATTERNS.md + per-form F
 commands/                     /create-content, /architect-course, /validate-course
 agents/                       content-composer, course-architect
 .claude-plugin/plugin.json    plugin manifest
-content/                      generated non-course output (gitignored)
+content/                      generated non-course output + content/academy/ publish projection (gitignored)
 courses/                      generated course output (gitignored)
 ```
 

@@ -124,6 +124,7 @@ whether it MUST ground against live sources.
 | 8–10 cadence/research/assess | `design-spine.md` §§5,6,9 | **yes** |
 | 11 emit | `references/output-contract.md`, `references/quality-bar.md`, `tools/` | — |
 | 12 write | `references/visual-placeholders.md` (+ writer-style if installed) | reuse 9 |
+| 13 plugins/publish (optional) | `references/academy-schema.md`, `lesson-brief-schema.md` §H | — |
 
 If grounding tooling is unavailable, follow the degradation ladder in
 `references/research-grounding.md` — never silently mark a claim verified from memory.

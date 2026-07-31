@@ -14,6 +14,8 @@ import validate_course
 import scaffold_course
 import verify_code
 import render_visuals
+import academy_export
+import verify_challenges
 
 
 def main() -> int:
@@ -22,7 +24,9 @@ def main() -> int:
                      ("validate_course", validate_course.selftest),
                      ("scaffold_course", scaffold_course.selftest),
                      ("verify_code", verify_code.selftest),
-                     ("render_visuals", render_visuals.selftest)]:
+                     ("render_visuals", render_visuals.selftest),
+                     ("academy_export", academy_export.selftest),
+                     ("verify_challenges", verify_challenges.selftest)]:
         print(f"\n===== {name} =====")
         rc |= fn()
     print("\n" + ("ALL TOOL SELFTESTS PASSED" if rc == 0 else "SOME SELFTESTS FAILED"))
