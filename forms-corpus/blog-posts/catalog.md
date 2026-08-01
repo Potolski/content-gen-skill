@@ -1,0 +1,45 @@
+# Catalog — Technical blog posts (Solana engineering blogs)
+
+Curated, currently-reachable exemplars of the **Solana engineering blog post** form
+(explainer / deep-dive / primer subtype dominant, with a few essay-leaning and
+how-to-leaning entries flagged). All URLs verified HTTP 200 as of July 2026.
+
+**IP note:** each entry is metadata (title, author/org, URL, year) + one original
+characterizing sentence + a structural note. No source body text is reproduced. These
+blogs are proprietary; nothing here is verbatim.
+
+Legend for subtype: **[explainer]** expository mechanism deep-dive · **[how-to]**
+explainer with a build/config payload · **[essay]** argues a thesis · **[compendium]**
+catalog/reference · **[release]** version-update note.
+
+| # | Title — Org / Author | URL | Year | Why it exemplifies the form + structural note |
+|---|---|---|---|---|
+| 1 | **An Introduction to Anchor: A Beginner's Guide to Building Solana Programs** — Helius / 0xIchigo | https://www.helius.dev/blog/an-introduction-to-anchor-a-beginners-guide-to-building-solana-programs | 2024 | The archetypal framework **[how-to]** explainer: teaches Anchor's macros and account model rather than shipping one artifact. Concept-hook → account-model scaffolding → macro-by-macro sections with Rust snippets → wrap; ~30–40% code. |
+| 2 | **A Hitchhiker's Guide to Solana Program Security** — Helius / 0xIchigo | https://www.helius.dev/blog/a-hitchhikers-guide-to-solana-program-security | 2024 | The reference **[compendium]** for program footguns. Problem hook → attacker-model framing → ~20 topic sections each on a fixed **Vulnerability → Example → Recommended Mitigation** triplet → Conclusion + Additional Resources; 6,000+ words. |
+| 3 | **Priority Fees: Understanding Solana's Transaction Fee Mechanics** — Helius / 0xIchigo | https://www.helius.dev/blog/priority-fees-understanding-solanas-transaction-fee-mechanics | 2024 | Half **[explainer]**, half **[how-to]**: models the fee market, then shows CU price/limit code. Mechanism first, then practical "how to set them programmatically"; grounded CU numbers. |
+| 4 | **Understanding Slots, Blocks, and Epochs on Solana** — Helius / Mert Mumtaz | https://www.helius.dev/blog/solana-slots-blocks-and-epochs | 2024 | Pure **[explainer]** with near-zero code, carried by analogy and diagrams. Short, tightly-scoped, defines three coupled concepts one H2 at a time; evergreen. |
+| 5 | **Turbine: Block Propagation on Solana** — Helius / Ryan Chern | https://www.helius.dev/blog/turbine-block-propagation-on-solana | 2024 | Protocol-mechanism **[explainer]**: how blocks propagate, with an EVM/gossip contrast and diagrams instead of code. Background → mechanism → comparison → future-research close. |
+| 6 | **What is Firedancer? A Deep Dive into Solana 2.0** — Helius | https://www.helius.dev/blog/what-is-firedancer | 2024 | Systems **[explainer]** on the Jump-built validator client. "What is X" title pattern, motivation hook, subsystem-by-subsystem, forward-looking wrap; evergreen-but-tracks-releases. |
+| 7 | **A Guide to Testing Solana Programs** — Helius | https://www.helius.dev/blog/a-guide-to-testing-solana-programs | 2024 | **[how-to]** explainer of the test-harness landscape (unit → integration → fuzz). Concept-per-section with code; the reference for LiteSVM/Mollusk/Surfpool framing. |
+| 8 | **All You Need to Know About State Compression on Solana** — Helius | https://www.helius.dev/blog/all-you-need-to-know-about-compression-on-solana | 2023 | **[explainer]** of concurrent Merkle trees and cNFTs using the "All You Need to Know" SEO pattern. Problem (cost) → data-structure mechanism → implications → resources. |
+| 9 | **Agave v2.1 Update: All You Need to Know** — Helius | https://www.helius.dev/blog/agave-v21-update-all-you-need-to-know | 2024 | The **[release]** franchise: a repeatable template applied to each Agave version. Change-by-change sections, version-pinned throughout; timely, SEO-tuned to the release. |
+| 10 | **The Solana eBPF Virtual Machine** — Anza | https://www.anza.xyz/blog/the-solana-ebpf-virtual-machine | 2024 | First-party systems **[explainer]** from the core-client team. 11 sections built bottom-up (rBPF → BPF → ISA → loaders → execution), 12–15 code/pseudo-code blocks, no diagrams; deeply authoritative register. |
+| 11 | **Solana Issuance From First Principles** — Anza | https://www.anza.xyz/blog/solana-issuance-from-first-principles | 2024 | Economics **[explainer]** leaning **[essay]**: derives the inflation/issuance model from first principles. Assumption → derivation → implication chain; charts carry the numbers. |
+| 12 | **Introducing the Central Scheduler (Agave v1.18)** — Anza | https://www.anza.xyz/blog/introducing-the-central-scheduler-an-optional-feature-of-agave-v1-18 | 2024 | Feature-launch **[explainer/release]** hybrid: explains a scheduler redesign tied to a specific client version. Problem-with-old-design → new mechanism → how-to-enable; version-pinned. |
+| 13 | **Lifecycle of a Solana Transaction** — Umbra Research | https://www.umbraresearch.xyz/writings/lifecycle-of-a-solana-transaction | 2023 | Independent-research **[explainer]**: traces a tx through the runtime with an explicit Ethereum contrast. Pipeline-ordered sections, high depth, lower frequency than company blogs. |
+| 14 | **Solana Fees (Part 1)** — Umbra Research | https://www.umbraresearch.xyz/writings/solana-fees-part-1 | 2023 | A numbered **[explainer]** series showing the cadence-building pattern: deep, primary-source-grounded, part of a multi-part arc rather than a one-off. |
+| 15 | **Solana Validator 101: Transaction Processing** — Jito | https://www.jito.wtf/blog/solana-validator-101-transaction-processing/ | 2023 | Validator-side **[explainer]** ("101" primer pattern) from an MEV/infra team. Stage-by-stage processing walk; sets up Jito's own product context at the end. |
+| 16 | **Jump vs. the Speed of Light** — Jump Crypto | https://jumpcrypto.com/writing/jump-vs-the-speed-of-light/ | 2022 | Narrative **[explainer/essay]** on why Firedancer's performance ceiling is physics. Motivation → mechanism → thesis-flavored framing; the "builder's-own" register distinct from RPC-vendor posts. |
+| 17 | **Solana Smart Contracts: Common Pitfalls and How to Avoid Them** — Neodyme | https://neodyme.io/en/blog/solana_common_pitfalls/ | 2022 | Security-audit **[compendium]** from an auditing firm — a foundational reference that predates and informs later security guides. Pitfall-by-pitfall with vulnerable/fixed code pairs. |
+| 18 | **Solana: An Auditor's Introduction** — OtterSec | https://osec.io/blog/2022-03-14-solana-security-intro | 2022 | Auditor-perspective **[explainer]** onboarding readers to Solana's attack surface. Datestamped, threat-model framing, concept-per-section; the auditor-voice complement to dev-focused security posts. |
+| 19 | **Solana Internals (Part 1): Native On-Chain Programs** — sec3 | https://www.sec3.dev/blog/solana-internals-part-1-what-are-the-native-on-chain-programs-and-why-do-they-matter | 2022 | Opening of a four-part **[explainer]** series on runtime internals — a clean example of the numbered-series cadence pattern. "What are X and why do they matter" title; builds across parts. |
+| 20 | **How to Optimize Solana Transactions** — QuickNode | https://www.quicknode.com/guides/solana-development/transactions/how-to-optimize-solana-transactions | 2024 | RPC-vendor **[how-to]** explainer blending CU optimization, priority fees, and retry logic. Problem (dropped txs) → tactic-per-section with code → vendor-API bridge; SEO-shaped guide format. |
+| 21 | **The Ultimate Solana Developer Guide** — Chainstack | https://chainstack.com/ultimate-solana-developer-guide/ | 2024 | Broad onboarding **[explainer]** ("ultimate guide" pattern) covering account model, deployment, and Web3.js. Wide-then-shallow survey structure with heavy internal linking; top-of-funnel. |
+| 22 | **Primer on Solana's Token Extensions** — Superteam / Yash Agarwal | https://blog.superteam.fun/p/primer-on-solanas-token-extensions | 2024 | Ecosystem-media **[explainer]** ("Primer on X" pattern) on Token-2022. Distinguishes classic Token vs Token Extensions, extension-by-extension with use cases; narrative-tokenization framing. |
+| 23 | **ok so what the fuck is the deal with solana anyway** — hana (2501babe) | https://2501babe.github.io/posts/solana101.html | 2022 | The independent-voice extreme: a rigorous **[explainer]** in irreverent register, proving the form tolerates strong personal voice when the technical substance holds. Conversational headings, EVM-dev framing. |
+
+**Coverage spread:** RPC/infra vendors (Helius, QuickNode, Chainstack), core-client
+team (Anza), validator/MEV (Jito), protocol builders (Jump), independent research
+(Umbra), security firms (Neodyme, OtterSec, sec3), ecosystem media (Superteam), and
+independent devs (hana). Subtypes span pure explainer, how-to explainer, compendium,
+release note, and essay-leaning — the full range the "blog post" channel carries.

@@ -1,0 +1,50 @@
+schema_version: 1
+course_id: solana-pda-counter-for-web2-devs
+lifecycle:
+  - briefed
+  - researched
+  - drafted
+  - verified
+  - published
+lessons:
+  - id: hello-and-toolchain
+    module: module-first-program
+    order: 1
+    status: briefed
+    brief: lessons/briefs/m00-l1-hello-and-toolchain.brief.yaml
+    research: null
+    facts: null
+    draft: null
+    dominant_job: motivate
+    blocked_by: []
+  - id: the-counter
+    module: module-first-program
+    order: 2
+    status: briefed
+    brief: lessons/briefs/m00-l2-the-counter.brief.yaml
+    research: null
+    facts: null
+    draft: null
+    dominant_job: show-how
+    blocked_by:
+      - hello-and-toolchain
+  - id: pda-per-user
+    module: module-pdas
+    order: 3
+    status: briefed
+    brief: lessons/briefs/m01-l1-pda-per-user.brief.yaml
+    research: lessons/research/m01-l1-pda-per-user.research.yaml
+    facts: lessons/facts/m01-l1-pda-per-user.facts.md
+    draft: null
+    dominant_job: derive-why
+    blocked_by:
+      - the-counter
+summary:
+  total: 3
+  by_status:
+    briefed: 3
+    researched: 0
+    drafted: 0
+    verified: 0
+    published: 0
+  next_to_write: hello-and-toolchain

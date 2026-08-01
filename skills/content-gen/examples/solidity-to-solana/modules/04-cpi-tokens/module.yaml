@@ -1,0 +1,26 @@
+module:
+  id: module-cpi-tokens
+  title: "How do programs call other programs and move tokens?"
+  driving_question: "How does my vault move a user's USDC?"
+  outcome:
+    bloom: implement
+    statement: "transfer SPL tokens into a program-controlled account via a CPI"
+  traces_to:
+    - to-deploy-vault
+  artifact: "SPL-token deposit via CPI"
+  artifact_rung: 6
+  depends_on:
+    - module-pdas
+  requires_skills:
+    - pdas
+  teaches_skills:
+    - cpis
+    - spl-tokens
+  patterns:
+    - challenge-ladder
+  difficulty_band: 3
+  lessons:
+    - token-deposit-cpi
+  retrieval_checkpoint: "Explain why invoke_signed needs the exact PDA seeds and what fails if they're wrong."
+  lesson_files:
+    token-deposit-cpi: "../../lessons/briefs/m04-l1-token-deposit-cpi.brief.yaml"

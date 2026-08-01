@@ -1,0 +1,35 @@
+research:
+  lesson_id: fuzzing-with-trident
+  status: gathering
+  source_priority:
+    - solana-dev
+    - context7
+  claims:
+    - id: C1
+      claim: "Trident is a Rust-based fuzzing framework for Solana/Anchor programs."
+      kind: concept
+      mcp: context7
+      query: "Trident Solana fuzzing framework Ackee"
+      verify: "name + that it targets Anchor programs; confirm current entrypoint/macro names"
+      status: verified
+      evidence: "Ackee Trident docs (verified via MCP during authoring)"
+      value: null
+    - id: C2
+      claim: "The current Anchor-native fuzzing path may be `anchor fuzz` / Crucible; confirm which to teach."
+      kind: api
+      mcp: solana-dev
+      query: "anchor fuzz Crucible Trident current fuzzing"
+      verify: "decide canonical tool for this cohort; record the exact invocation"
+      status: gathering
+      evidence: "TODO: confirm before writing the lab"
+      value: null
+  code_to_ground:
+    - id: K1
+      what: "Trident fuzz target + invariant assertion"
+      autofixer: required
+      status: gathering
+  open_questions:
+    - "Teach Trident, or the newer anchor-native fuzzing path? Confirm via the kit before the lab."
+  frozen_facts:
+    - "Fuzzing asserts invariants over many generated inputs; it complements, never replaces, targeted tests."
+    - "A fuzzer only finds violations of the invariants you actually assert."

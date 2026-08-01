@@ -1,0 +1,34 @@
+model: "capstone+onchain"
+gate_principle: "Completion is gated on a deployed program + passing tests, never on watching."
+proof_matrix:
+  - outcome: to-deploy-vault
+    proven_by: capstone-ship-your-own
+    evidence: "deployed devnet program id + passing test suite"
+  - outcome: to-explain-accounts
+    proven_by: checkpoint-accounts
+    evidence: "written explain-it-back, rubric-checked"
+checkpoints:
+  - id: checkpoint-accounts
+    after_module: module-state
+    type: explain-back
+    spec: "Explain where state lives and why programs are stateless; name one trade-off vs EVM storage."
+cumulative_checkpoint:
+  after_module: module-cpi-tokens
+  spec: "PDA vault that deposits an SPL token via CPI with an owner check, reusing account validation from every prior build."
+capstone:
+  id: capstone-ship-your-own
+  statement: "Ship an original small program using a PDA + an SPL-token CPI, deployed to devnet, with passing tests."
+  requires_skills:
+    - account-model
+    - pdas
+    - cpis
+    - spl-tokens
+  rubric:
+    - "uses a PDA with the canonical bump stored"
+    - "performs at least one CPI"
+    - "signer + owner checks on every mutating instruction"
+    - "tests pass; deploys to devnet"
+  credential: on-chain-NFT
+  traces_to:
+    - to-deploy-vault
+    - to-explain-accounts

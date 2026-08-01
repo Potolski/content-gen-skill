@@ -1,0 +1,26 @@
+module:
+  id: module-arith-cpi
+  title: "Arithmetic and the programs you call"
+  driving_question: "How do overflow and an unchecked CPI turn into a drain?"
+  outcome:
+    bloom: implement
+    statement: "remove overflow and arbitrary-CPI vulnerabilities"
+  traces_to:
+    - to-find-fix-vulns
+  artifact: "checked arithmetic + validated CPI targets"
+  artifact_rung: 5
+  depends_on:
+    - module-defense
+  requires_skills:
+    - pda-security
+  teaches_skills:
+    - arithmetic-safety
+    - cpi-security
+  patterns:
+    - security-epoch
+  difficulty_band: 3
+  lessons:
+    - arithmetic-and-cpi-safety
+  retrieval_checkpoint: "Explain how checked_add and a hardcoded program id each prevent a specific exploit."
+  lesson_files:
+    arithmetic-and-cpi-safety: "../../lessons/briefs/m02-l1-arithmetic-and-cpi-safety.brief.yaml"

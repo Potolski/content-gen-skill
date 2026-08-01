@@ -1,0 +1,28 @@
+module:
+  id: module-fuzz-and-audit
+  title: "Prove it: fuzz and audit"
+  driving_question: "How do I find the bug I didn't think of, and prove the fix holds?"
+  outcome:
+    bloom: evaluate
+    statement: "fuzz a program and audit an unfamiliar one end-to-end"
+  traces_to:
+    - to-audit-program
+  artifact: "a fuzz harness + a full audit report"
+  artifact_rung: 7
+  depends_on:
+    - module-arith-cpi
+  requires_skills:
+    - cpi-security
+  teaches_skills:
+    - fuzzing
+  patterns:
+    - security-epoch
+    - testing-thread
+  difficulty_band: 3
+  lessons:
+    - fuzzing-with-trident
+    - capstone-audit-ctf
+  retrieval_checkpoint: "State one invariant worth fuzzing in your own program and why a unit test would miss it."
+  lesson_files:
+    fuzzing-with-trident: "../../lessons/briefs/m03-l1-fuzzing-with-trident.brief.yaml"
+    capstone-audit-ctf: "../../lessons/briefs/m03-l2-capstone-audit-ctf.brief.yaml"

@@ -1,0 +1,27 @@
+module:
+  id: module-first-program
+  title: "Your first program: state lives in accounts"
+  driving_question: "Where does my data live if a program is just a stateless function?"
+  outcome:
+    bloom: implement
+    statement: "write and read a counter stored in an account"
+  traces_to:
+    - to-pda-counter
+  artifact: "a single-counter program"
+  artifact_rung: 1
+  depends_on: []
+  requires_skills: []
+  teaches_skills:
+    - account-model
+    - programs-instructions
+  patterns:
+    - concept-spine
+    - challenge-ladder
+  difficulty_band: 1
+  lessons:
+    - hello-and-toolchain
+    - the-counter
+  retrieval_checkpoint: "Explain, without notes, why a Solana program can't just store a variable the way a web2 service holds memory."
+  lesson_files:
+    hello-and-toolchain: "../../lessons/briefs/m00-l1-hello-and-toolchain.brief.yaml"
+    the-counter: "../../lessons/briefs/m00-l2-the-counter.brief.yaml"

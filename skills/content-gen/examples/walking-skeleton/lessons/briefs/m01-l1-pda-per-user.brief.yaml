@@ -1,0 +1,30 @@
+lesson:
+  id: pda-per-user
+  title: "Give every user their own counter"
+  objectives:
+    - bloom: explain
+      statement: "explain why Solana has no mappings and how PDAs replace them"
+    - bloom: implement
+      statement: "derive a canonical PDA seeded by the user and store per-user state under it"
+  prerequisites:
+    - the-counter
+    - account-model
+  hook: "One global counter is a toy. Real apps need one per user. In web2 that's a keyed row; on Solana there are no mappings. So how does each user get their own slot?"
+  concept_spec: "PDAs: program-owned addresses derived deterministically from seeds + a canonical bump via find_program_address. Worked example: seed the counter account by the user's pubkey."
+  artifact_spec: "Upgrade the counter so each user gets their own counter PDA, seeded by their pubkey; initialize-if-missing and increment."
+  exercise_spec: "Completion: fill in the seeds array (TODO). Solo: add a second PDA keyed by a string label. Accept: two distinct users get distinct, recoverable counters; a reinit attempt fails."
+  the_tradeoff: "PDAs are deterministic and need no stored key, BUT you must store or recompute the canonical bump, and a sloppy seed scheme is an exploit (collision or spoofing)."
+  just_in_time:
+    define:
+      - program-derived-address
+      - canonical-bump
+      - seeds
+    footguns:
+      - "using a non-canonical bump"
+      - "user-controlled seeds without validation"
+  assessment: "test: two users write and read back their own counter; reinit attempt fails"
+  difficulty: 2
+  fading: completion
+  dominant_job: derive-why
+  voice_notes: "contested 'why no mappings' — derivation leads (Vitalik craft over spine); cite the grounded rent number once verified."
+  est_length: "1400 words / ~14 min"

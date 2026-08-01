@@ -1,0 +1,24 @@
+lesson:
+  id: capstone-ship-your-own
+  title: "Ship your own program"
+  objectives:
+    - bloom: create
+      statement: "design, build, test, and deploy an original program using a PDA + an SPL-token CPI"
+  prerequisites:
+    - token-deposit-cpi
+  hook: "You've shipped the pieces. Now build something that's yours — small, real, and on devnet by the end of the day."
+  concept_spec: "Integration: combine account state, a PDA, and a token CPI into one original program of the learner's choosing. No new primitive — this consolidates everything."
+  artifact_spec: "An original small program (learner's design) using an account/PDA + an SPL-token CPI, deployed to devnet with a passing test suite."
+  exercise_spec: "Solo: design and ship it. Accept: deploys to devnet; tests pass; signer + owner checks on every mutating instruction."
+  the_tradeoff: "Freeform scope is motivating, BUT it's where untested edge cases hide — the test suite is the gate, not the demo."
+  just_in_time:
+    define: []
+    footguns:
+      - "skipping owner checks under time pressure"
+      - "shipping without a failing-path test"
+  assessment: "deployed devnet program id + passing test suite (signer/owner checks present)"
+  difficulty: 3
+  fading: solo
+  dominant_job: motivate
+  voice_notes: "course close; spine carries it; celebrate the ship, name the one trade-off they chose."
+  est_length: "900 words / ~9 min"

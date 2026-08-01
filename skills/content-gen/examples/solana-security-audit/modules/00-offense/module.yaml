@@ -1,0 +1,23 @@
+module:
+  id: module-offense
+  title: "Think like an attacker first"
+  driving_question: "Where do Solana programs actually break?"
+  outcome:
+    bloom: analyze
+    statement: "find and trigger a planted vulnerability in a small program"
+  traces_to:
+    - to-find-fix-vulns
+  artifact: "a working exploit against a vulnerable program"
+  artifact_rung: 3
+  depends_on: []
+  requires_skills: []
+  teaches_skills:
+    - threat-modeling
+  patterns:
+    - security-epoch
+  difficulty_band: 2
+  lessons:
+    - the-exploit-mindset
+  retrieval_checkpoint: "Name the four most common Solana vulnerability classes from memory."
+  lesson_files:
+    the-exploit-mindset: "../../lessons/briefs/m00-l1-the-exploit-mindset.brief.yaml"

@@ -1,0 +1,64 @@
+{
+  "files": {
+    "course.yaml": {
+      "sha256": "2180fb37cfe3e03face87b7ff0c9838e30a5eca27e31d1132de17f5ce3f962ba",
+      "edited_by_human": false
+    },
+    "manifest.json": {
+      "sha256": "6bb9584125a8c5d6414315338a449764c005aa3d11b42c7f939fd9cebfd105dd",
+      "edited_by_human": false
+    },
+    "modules/00-first-program/module.yaml": {
+      "sha256": "4fa12a09e2114d22144160d165324fb05a9fdb6e296a34c4b08aedf8f9fcdc62",
+      "edited_by_human": false
+    },
+    "modules/01-pdas/module.yaml": {
+      "sha256": "a1b1f63b6622947d24a9f259c0311c327896b1a827a47777818a2d5037ccd872",
+      "edited_by_human": false
+    },
+    "lessons/briefs/m00-l1-hello-and-toolchain.brief.yaml": {
+      "sha256": "0eade8140f52b3bfb43be08f5fa639d490114ad378e9bff19d517e0481f870b9",
+      "edited_by_human": false
+    },
+    "lessons/briefs/m00-l2-the-counter.brief.yaml": {
+      "sha256": "24abfdea7407925efadea57d6df34379a31634d0adf30451b5990088a068f0d5",
+      "edited_by_human": false
+    },
+    "lessons/briefs/m01-l1-pda-per-user.brief.yaml": {
+      "sha256": "f0fab9b3379a2195a9c1f494ca5bccf8fbbf8cb68b8e870c0c6f1a5e85dd912e",
+      "edited_by_human": false
+    },
+    "lessons/research/m01-l1-pda-per-user.research.yaml": {
+      "sha256": "c1f43a78b0e18e79edba6c863ccc50397e0baa64c337ebce8baf735cfd91ac37",
+      "edited_by_human": false
+    },
+    "lessons/facts/m01-l1-pda-per-user.facts.md": {
+      "sha256": "12ce389f24e31f0dccf87ce9c80c5f1f061e0091fe0da0cb26d4e1bed985b406",
+      "edited_by_human": false
+    },
+    "lessons/drafts/.gitkeep": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "edited_by_human": false
+    },
+    "cadence.yaml": {
+      "sha256": "8797209ef0f60468a615a659ce9841a2929bedccc688f2bf16c34995d1555a0c",
+      "edited_by_human": false
+    },
+    "assessment.yaml": {
+      "sha256": "024f2652672f55d2dc666a4789226697812f999f4148a23a20a2dbe0f39ea8dd",
+      "edited_by_human": false
+    },
+    "_state.yaml": {
+      "sha256": "44640c64c668076085612dedd85a6133ecad9047e170508a8fa56a683a856a67",
+      "edited_by_human": false
+    },
+    "queue/NEXT.md": {
+      "sha256": "7acb0b46a99c1063d9db810c7c20d3bcd0cd44caa79e5788ec51b521d4a4b958",
+      "edited_by_human": false
+    },
+    "README.md": {
+      "sha256": "294e052e0bc1b6dc67abf3783e1bb2612dfd9b6389b5e80b8e14e2e8e216a981",
+      "edited_by_human": false
+    }
+  }
+}

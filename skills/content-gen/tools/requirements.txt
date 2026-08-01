@@ -1,0 +1,3 @@
+# content-gen tools are stdlib-only — no third-party dependencies, no network.
+# (Mirrors writer-style's no-deps stance: the machine source of truth is JSON,
+# and YAML is emitted, never parsed, so there is nothing to install.)

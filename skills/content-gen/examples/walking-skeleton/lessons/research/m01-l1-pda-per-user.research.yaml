@@ -1,0 +1,46 @@
+research:
+  lesson_id: pda-per-user
+  status: gathering
+  source_priority:
+    - solana-dev
+    - context7
+    - helius
+  claims:
+    - id: C1
+      claim: "Solana has no native mapping type; per-user state uses separate (PDA) accounts."
+      kind: concept
+      mcp: solana-dev
+      query: "Solana account model vs mappings; PDA per-user state"
+      verify: "core docs: programs stateless, state in accounts"
+      status: verified
+      evidence: "solana-dev: Accounts / PDA docs"
+      value: null
+    - id: C2
+      claim: "PDAs derive via find_program_address(seeds, program_id) returning an address and a canonical bump."
+      kind: api
+      mcp: solana-dev
+      query: "find_program_address canonical bump"
+      verify: "API name + canonical-bump semantics current"
+      status: verified
+      evidence: "solana-dev: PDA section"
+      value: null
+    - id: F3
+      claim: "Rent-exempt minimum for the per-user counter account on devnet, in SOL."
+      kind: onchain-number
+      mcp: helius
+      query: "getMinimumBalanceForRentExemption for a ~17-byte account"
+      verify: "pull live devnet figure; record exact value + date"
+      status: gathering
+      evidence: "TODO: helius getMinimumBalanceForRentExemption"
+      value: null
+  code_to_ground:
+    - id: K1
+      what: "seeds array for the per-user PDA"
+      autofixer: required
+      status: gathering
+  open_questions:
+    - "Show init_if_needed here, or defer the reinit footgun to its own beat?"
+  frozen_facts:
+    - "Solana has no native mappings; per-user data lives in separate PDA accounts."
+    - "PDA derivation: find_program_address(seeds, program_id) -> (address, canonical_bump)."
+    - "Store the canonical bump; recomputing it every call wastes compute and only the canonical bump is safe."

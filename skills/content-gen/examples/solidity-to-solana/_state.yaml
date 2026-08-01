@@ -1,0 +1,84 @@
+schema_version: 1
+course_id: solana-for-solidity-devs
+lifecycle:
+  - briefed
+  - researched
+  - drafted
+  - verified
+  - published
+lessons:
+  - id: hello-and-toolchain
+    module: module-mappings
+    order: 1
+    status: briefed
+    brief: lessons/briefs/m00-l1-hello-and-toolchain.brief.yaml
+    research: null
+    facts: null
+    draft: null
+    dominant_job: motivate
+    blocked_by: []
+  - id: compute-and-errors
+    module: module-gas-and-revert
+    order: 2
+    status: briefed
+    brief: lessons/briefs/m01-l1-compute-and-errors.brief.yaml
+    research: null
+    facts: null
+    draft: null
+    dominant_job: derive-why
+    blocked_by:
+      - hello-and-toolchain
+  - id: state-lives-in-accounts
+    module: module-state
+    order: 3
+    status: briefed
+    brief: lessons/briefs/m02-l1-state-lives-in-accounts.brief.yaml
+    research: null
+    facts: null
+    draft: null
+    dominant_job: derive-why
+    blocked_by:
+      - hello-and-toolchain
+      - compute-and-errors
+  - id: per-user-pda-vault
+    module: module-pdas
+    order: 4
+    status: briefed
+    brief: lessons/briefs/m03-l1-per-user-pda-vault.brief.yaml
+    research: null
+    facts: null
+    draft: null
+    dominant_job: derive-why
+    blocked_by:
+      - state-lives-in-accounts
+  - id: token-deposit-cpi
+    module: module-cpi-tokens
+    order: 5
+    status: briefed
+    brief: lessons/briefs/m04-l1-token-deposit-cpi.brief.yaml
+    research: null
+    facts: null
+    draft: null
+    dominant_job: show-how
+    blocked_by:
+      - per-user-pda-vault
+  - id: capstone-ship-your-own
+    module: module-capstone
+    order: 6
+    status: briefed
+    brief: lessons/briefs/m05-l1-capstone-ship-your-own.brief.yaml
+    research: null
+    facts: null
+    draft: null
+    dominant_job: motivate
+    blocked_by:
+      - token-deposit-cpi
+summary:
+  total: 6
+  by_status:
+    briefed: 6
+    researched: 0
+    drafted: 0
+    verified: 0
+    published: 0
+  next_to_write: hello-and-toolchain

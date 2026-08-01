@@ -1,0 +1,71 @@
+pedagogy:
+  fading_schedule:
+    - lesson: the-exploit-mindset
+      mode: worked
+      difficulty: 2
+    - lesson: signer-and-owner-checks
+      mode: worked
+      difficulty: 2
+    - lesson: pda-and-bump-safety
+      mode: completion
+      difficulty: 2
+    - lesson: arithmetic-and-cpi-safety
+      mode: completion
+      difficulty: 3
+    - lesson: fuzzing-with-trident
+      mode: completion
+      difficulty: 3
+    - lesson: capstone-audit-ctf
+      mode: solo
+      difficulty: 3
+  difficulty_curve:
+    - 2
+    - 2
+    - 2
+    - 3
+    - 3
+    - 3
+  worked_examples_removed_after: module-defense
+  spiral:
+    - skill: account-validation
+      reappears_in:
+        - pda-and-bump-safety
+        - arithmetic-and-cpi-safety
+        - capstone-audit-ctf
+    - skill: pda-security
+      reappears_in:
+        - arithmetic-and-cpi-safety
+        - capstone-audit-ctf
+  retrieval_checkpoints:
+    - checkpoint-big-four
+  cumulative_checkpoint_before: capstone-audit-ctf
+release:
+  mode: cohort-paced
+  start_date: 2026-07-06
+  timezone: America/Sao_Paulo
+  schedule:
+    - week: 1
+      publish:
+        - the-exploit-mindset
+        - signer-and-owner-checks
+      est_effort_hours: 6
+    - week: 2
+      publish:
+        - pda-and-bump-safety
+        - arithmetic-and-cpi-safety
+      est_effort_hours: 8
+    - week: 3
+      publish:
+        - fuzzing-with-trident
+        - capstone-audit-ctf
+      est_effort_hours: 10
+  per_lesson_effort:
+    - lesson: fuzzing-with-trident
+      draft_words: 1300
+      research_hours: 2
+      write_hours: 2
+      review_hours: 1.5
+  freshness_policy:
+    onchain_numbers_restale_after_days: 60
+    applies_to:
+      - fuzzing-with-trident

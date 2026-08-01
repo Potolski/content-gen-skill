@@ -1,0 +1,714 @@
+{
+  "schema_version": 1,
+  "course": {
+    "id": "solana-program-security-audit",
+    "title": "Audit Solana Programs: Exploit, Harden, Fuzz",
+    "one_line_promise": "By the end you can take an unfamiliar Solana program, find the planted vulnerabilities, ship the fixes, and prove it with a fuzz harness — the way an auditor does.",
+    "version": "0.1.0",
+    "status": "draft",
+    "created": "2026-06-27",
+    "audience": {
+      "who": "solana-dev-leveling-up",
+      "prior_model": "Already builds and tests Anchor/native programs (accounts, PDAs, CPIs, SPL tokens). Wants the security tier.",
+      "prerequisites": [
+        "has shipped a PDA + CPI program",
+        "comfortable reading Rust and running anchor test"
+      ]
+    },
+    "terminal_outcomes": [
+      {
+        "id": "to-find-fix-vulns",
+        "bloom": "analyze",
+        "statement": "identify and fix the common Solana program vulnerabilities (signer/owner, PDA/bump, arithmetic, arbitrary CPI) in an unfamiliar codebase"
+      },
+      {
+        "id": "to-audit-program",
+        "bloom": "evaluate",
+        "statement": "audit an unfamiliar Solana program end-to-end: find the planted bugs, ship fixes, and add a fuzz test that catches a regression"
+      }
+    ],
+    "format": "self-paced",
+    "length_target": {
+      "hours": 8,
+      "lessons": 6,
+      "weeks": 3
+    },
+    "credential": "on-chain-NFT",
+    "routing": {
+      "backbone_pattern": [
+        "security-epoch"
+      ],
+      "lesson_template": "overview-lab-challenge",
+      "guest_patterns": [
+        "build-it-twice",
+        "testing-thread"
+      ],
+      "security": "security-epoch"
+    },
+    "artifact_ladder": [
+      "pda-app",
+      "defi",
+      "capstone"
+    ]
+  },
+  "dag": {
+    "nodes": [
+      "threat-modeling",
+      "account-validation",
+      "pda-security",
+      "arithmetic-safety",
+      "cpi-security",
+      "fuzzing"
+    ],
+    "edges": [
+      [
+        "threat-modeling",
+        "account-validation"
+      ],
+      [
+        "account-validation",
+        "pda-security"
+      ],
+      [
+        "pda-security",
+        "arithmetic-safety"
+      ],
+      [
+        "arithmetic-safety",
+        "cpi-security"
+      ],
+      [
+        "cpi-security",
+        "fuzzing"
+      ]
+    ]
+  },
+  "glossary": [
+    {
+      "term": "owner-check",
+      "def": "Verifying an account is owned by the expected program before trusting its data.",
+      "first_taught": "signer-and-owner-checks"
+    },
+    {
+      "term": "canonical-bump",
+      "def": "The single valid PDA bump; using a non-canonical bump is an exploitable forgery.",
+      "first_taught": "pda-and-bump-safety"
+    },
+    {
+      "term": "arbitrary-cpi",
+      "def": "Invoking a caller-supplied program id without validation — lets an attacker substitute a malicious program.",
+      "first_taught": "arithmetic-and-cpi-safety"
+    }
+  ],
+  "concept_ledger": [
+    {
+      "concept": "threat-modeling",
+      "introduced_in": "the-exploit-mindset"
+    },
+    {
+      "concept": "account-validation",
+      "introduced_in": "signer-and-owner-checks"
+    },
+    {
+      "concept": "pda-security",
+      "introduced_in": "pda-and-bump-safety"
+    },
+    {
+      "concept": "arithmetic-safety",
+      "introduced_in": "arithmetic-and-cpi-safety"
+    },
+    {
+      "concept": "cpi-security",
+      "introduced_in": "arithmetic-and-cpi-safety"
+    },
+    {
+      "concept": "fuzzing",
+      "introduced_in": "fuzzing-with-trident"
+    }
+  ],
+  "modules": [
+    {
+      "id": "module-offense",
+      "title": "Think like an attacker first",
+      "driving_question": "Where do Solana programs actually break?",
+      "outcome": {
+        "bloom": "analyze",
+        "statement": "find and trigger a planted vulnerability in a small program"
+      },
+      "traces_to": [
+        "to-find-fix-vulns"
+      ],
+      "artifact": "a working exploit against a vulnerable program",
+      "artifact_rung": 3,
+      "depends_on": [],
+      "requires_skills": [],
+      "teaches_skills": [
+        "threat-modeling"
+      ],
+      "patterns": [
+        "security-epoch"
+      ],
+      "difficulty_band": 2,
+      "lessons": [
+        "the-exploit-mindset"
+      ],
+      "retrieval_checkpoint": "Name the four most common Solana vulnerability classes from memory."
+    },
+    {
+      "id": "module-defense",
+      "title": "The checks that stop most exploits",
+      "driving_question": "Which account checks are load-bearing, and what happens without them?",
+      "outcome": {
+        "bloom": "implement",
+        "statement": "add signer, owner, and canonical-bump checks that close the planted holes"
+      },
+      "traces_to": [
+        "to-find-fix-vulns"
+      ],
+      "artifact": "the same program, hardened",
+      "artifact_rung": 3,
+      "depends_on": [
+        "module-offense"
+      ],
+      "requires_skills": [
+        "threat-modeling"
+      ],
+      "teaches_skills": [
+        "account-validation",
+        "pda-security"
+      ],
+      "patterns": [
+        "security-epoch",
+        "build-it-twice"
+      ],
+      "difficulty_band": 2,
+      "lessons": [
+        "signer-and-owner-checks",
+        "pda-and-bump-safety"
+      ],
+      "retrieval_checkpoint": "Given a snippet, spot the missing owner check and the non-canonical bump."
+    },
+    {
+      "id": "module-arith-cpi",
+      "title": "Arithmetic and the programs you call",
+      "driving_question": "How do overflow and an unchecked CPI turn into a drain?",
+      "outcome": {
+        "bloom": "implement",
+        "statement": "remove overflow and arbitrary-CPI vulnerabilities"
+      },
+      "traces_to": [
+        "to-find-fix-vulns"
+      ],
+      "artifact": "checked arithmetic + validated CPI targets",
+      "artifact_rung": 5,
+      "depends_on": [
+        "module-defense"
+      ],
+      "requires_skills": [
+        "pda-security"
+      ],
+      "teaches_skills": [
+        "arithmetic-safety",
+        "cpi-security"
+      ],
+      "patterns": [
+        "security-epoch"
+      ],
+      "difficulty_band": 3,
+      "lessons": [
+        "arithmetic-and-cpi-safety"
+      ],
+      "retrieval_checkpoint": "Explain how checked_add and a hardcoded program id each prevent a specific exploit."
+    },
+    {
+      "id": "module-fuzz-and-audit",
+      "title": "Prove it: fuzz and audit",
+      "driving_question": "How do I find the bug I didn't think of, and prove the fix holds?",
+      "outcome": {
+        "bloom": "evaluate",
+        "statement": "fuzz a program and audit an unfamiliar one end-to-end"
+      },
+      "traces_to": [
+        "to-audit-program"
+      ],
+      "artifact": "a fuzz harness + a full audit report",
+      "artifact_rung": 7,
+      "depends_on": [
+        "module-arith-cpi"
+      ],
+      "requires_skills": [
+        "cpi-security"
+      ],
+      "teaches_skills": [
+        "fuzzing"
+      ],
+      "patterns": [
+        "security-epoch",
+        "testing-thread"
+      ],
+      "difficulty_band": 3,
+      "lessons": [
+        "fuzzing-with-trident",
+        "capstone-audit-ctf"
+      ],
+      "retrieval_checkpoint": "State one invariant worth fuzzing in your own program and why a unit test would miss it."
+    }
+  ],
+  "lessons": [
+    {
+      "id": "the-exploit-mindset",
+      "module": "module-offense",
+      "order": 1,
+      "brief": {
+        "id": "the-exploit-mindset",
+        "title": "Break it before you defend it",
+        "objectives": [
+          {
+            "bloom": "analyze",
+            "statement": "find and trigger a planted vulnerability in a small Solana program"
+          }
+        ],
+        "prerequisites": [],
+        "hook": "You've shipped programs that 'worked.' Here's one that works too — and drains its vault in one transaction. Your job today isn't to fix it. It's to break it.",
+        "concept_spec": "The auditor's mindset: assume every account and input is hostile. Worked example: an unguarded withdraw that anyone can call. One new element: reading a program adversarially.",
+        "artifact_spec": "A vulnerable counter-vault program; the learner writes a test that drains it.",
+        "exercise_spec": "Completion: finish the exploit test that calls withdraw as the wrong signer (TODO). Solo: find a second way to break it. Accept: the exploit test passes (the program is drained).",
+        "the_tradeoff": "Exploit-first teaches the why fast, BUT it's only safe on intentionally vulnerable code — never run these moves on programs you don't own.",
+        "just_in_time": {
+          "define": [
+            "threat-model",
+            "invariant",
+            "attacker-controlled-input"
+          ],
+          "footguns": [
+            "assuming the happy path is the only path",
+            "trusting an account because it has the right shape"
+          ]
+        },
+        "assessment": "the learner's exploit test drains the vulnerable program",
+        "difficulty": 2,
+        "fading": "worked",
+        "dominant_job": "show-how",
+        "voice_notes": "security: be wary of Hotz reductive collapse — exploits are concrete, don't over-simplify the fix. Helius expository craft.",
+        "est_length": "1300 words / ~13 min"
+      }
+    },
+    {
+      "id": "signer-and-owner-checks",
+      "module": "module-defense",
+      "order": 1,
+      "brief": {
+        "id": "signer-and-owner-checks",
+        "title": "Signer and owner checks: the cheap fixes that matter most",
+        "objectives": [
+          {
+            "bloom": "implement",
+            "statement": "add signer and owner checks that close an authorization hole"
+          }
+        ],
+        "prerequisites": [
+          "the-exploit-mindset"
+        ],
+        "hook": "The drain you just wrote worked because the program never checked who was calling or who owned the account. Two lines would have stopped it. Let's add them — and see them block your exploit.",
+        "concept_spec": "Signer checks (is_signer) and owner checks (account.owner == expected program). Build it twice: the native check, then the Anchor constraint that generates it. One new element: the owner check.",
+        "artifact_spec": "Harden the vault: require the authority to sign and validate account ownership; re-run the exploit and watch it fail.",
+        "exercise_spec": "Completion: add the missing has_one / signer constraint (TODO). Solo: add an owner check on a second account. Accept: the previous exploit test now fails; the legitimate path passes.",
+        "the_tradeoff": "Anchor constraints make these checks declarative and hard to forget, BUT they hide what's enforced — knowing the native check is what lets you audit code that doesn't use them.",
+        "just_in_time": {
+          "define": [
+            "signer-check",
+            "owner-check",
+            "has_one"
+          ],
+          "footguns": [
+            "checking is_signer but not owner",
+            "trusting Anchor to add a check you never declared"
+          ]
+        },
+        "assessment": "anchor test: the exploit now reverts; the authorized path still works",
+        "difficulty": 2,
+        "fading": "worked",
+        "dominant_job": "show-how",
+        "voice_notes": "build-it-twice guest: native check then Anchor constraint; the 'two lines' callback to the exploit is the seam.",
+        "est_length": "1300 words / ~13 min"
+      }
+    },
+    {
+      "id": "pda-and-bump-safety",
+      "module": "module-defense",
+      "order": 2,
+      "brief": {
+        "id": "pda-and-bump-safety",
+        "title": "Canonical bumps and seed hygiene",
+        "objectives": [
+          {
+            "bloom": "explain",
+            "statement": "explain why a non-canonical bump is a forgery and why seed schemes must be validated"
+          },
+          {
+            "bloom": "implement",
+            "statement": "store and check the canonical bump and validate seeds"
+          }
+        ],
+        "prerequisites": [
+          "signer-and-owner-checks",
+          "account-validation"
+        ],
+        "hook": "Your PDA derivation 'worked' in testing. But an attacker can pass a different valid bump, or craft seeds that collide with another user's account. Why does Solana even allow that?",
+        "concept_spec": "Canonical vs non-canonical bumps; storing the bump; validating user-influenced seeds. Derive WHY find_program_address returns the canonical bump and why accepting any bump is exploitable. One new element: bump canonicalization.",
+        "artifact_spec": "Harden the vault's PDA: store the canonical bump on init, check it on use, and reject crafted seeds.",
+        "exercise_spec": "Completion: replace the accepted-bump arg with the stored canonical bump (TODO). Solo: write a test that tries a non-canonical bump and must fail. Accept: forged-bump and colliding-seed attempts revert.",
+        "the_tradeoff": "Storing the bump costs a byte and a check, BUT recomputing or trusting a passed-in bump is both slower and a security hole — the canonical bump is the only safe one.",
+        "just_in_time": {
+          "define": [
+            "canonical-bump",
+            "non-canonical-bump",
+            "seed-collision"
+          ],
+          "footguns": [
+            "accepting a bump as an instruction arg",
+            "user-controlled seeds without a namespace"
+          ]
+        },
+        "assessment": "anchor test: forged-bump and colliding-seed attacks revert; legitimate access works",
+        "difficulty": 2,
+        "fading": "completion",
+        "dominant_job": "derive-why",
+        "voice_notes": "contested/intricate design → Vitalik craft over spine; derive why canonical bump is the only safe one.",
+        "est_length": "1400 words / ~14 min"
+      }
+    },
+    {
+      "id": "arithmetic-and-cpi-safety",
+      "module": "module-arith-cpi",
+      "order": 1,
+      "brief": {
+        "id": "arithmetic-and-cpi-safety",
+        "title": "Overflow and the programs you call",
+        "objectives": [
+          {
+            "bloom": "implement",
+            "statement": "replace unchecked arithmetic with checked operations"
+          },
+          {
+            "bloom": "implement",
+            "statement": "validate a CPI target program id to prevent arbitrary CPI"
+          }
+        ],
+        "prerequisites": [
+          "pda-and-bump-safety",
+          "pda-security"
+        ],
+        "hook": "A u64 that wraps from zero to four billion, and a 'token program' the caller gets to choose. Two of the nastiest Solana exploits hide in plain arithmetic and one unchecked address.",
+        "concept_spec": "Checked arithmetic (checked_add/sub/mul) vs silent overflow; arbitrary-CPI (validating the program id you invoke). One new element per beat: overflow, then CPI target validation.",
+        "artifact_spec": "Harden the vault: make all balance math checked, and validate the token program id before the deposit CPI.",
+        "exercise_spec": "Completion: swap the + for checked_add returning an error (TODO). Solo: add a program-id check before the CPI. Accept: an overflow test reverts; a swapped-program CPI reverts.",
+        "the_tradeoff": "Checked math and program-id validation add a few lines and a few compute units, BUT skipping them is how vaults get drained — correctness beats the micro-optimization here.",
+        "just_in_time": {
+          "define": [
+            "checked-arithmetic",
+            "arbitrary-cpi",
+            "program-id-validation"
+          ],
+          "footguns": [
+            "as casts that truncate",
+            "invoking a caller-supplied program id",
+            "trusting a token account's mint without checking"
+          ]
+        },
+        "assessment": "anchor test: overflow path reverts; a substituted CPI program reverts",
+        "difficulty": 3,
+        "fading": "completion",
+        "dominant_job": "show-how",
+        "voice_notes": "documented mechanisms → Helius expository; two clean beats, one new element each.",
+        "est_length": "1400 words / ~14 min"
+      }
+    },
+    {
+      "id": "fuzzing-with-trident",
+      "module": "module-fuzz-and-audit",
+      "order": 1,
+      "brief": {
+        "id": "fuzzing-with-trident",
+        "title": "Find the bug you didn't think of: fuzzing",
+        "objectives": [
+          {
+            "bloom": "implement",
+            "statement": "write a fuzz test that asserts a program invariant and catches a regression"
+          }
+        ],
+        "prerequisites": [
+          "arithmetic-and-cpi-safety",
+          "cpi-security"
+        ],
+        "hook": "Your tests pass — but they only check the cases you imagined. Fuzzing throws millions of cases you didn't. Let's point one at your vault and see what it finds.",
+        "concept_spec": "Property/invariant fuzzing for Solana programs with Trident; expressing an invariant (e.g. total deposited never exceeds vault balance). One new element: the fuzz harness as a thread on top of the existing tests.",
+        "artifact_spec": "Add a Trident fuzz target asserting a balance invariant on the hardened vault; reintroduce a bug and watch the fuzzer catch it.",
+        "exercise_spec": "Completion: fill in the invariant assertion (TODO). Solo: add a second invariant. Accept: the fuzzer flags a deliberately reintroduced overflow.",
+        "the_tradeoff": "Fuzzing surfaces unknown-unknowns, BUT it costs setup and CI time and only checks the invariants you write — it complements, never replaces, targeted tests and review.",
+        "just_in_time": {
+          "define": [
+            "fuzzing",
+            "invariant",
+            "property-test"
+          ],
+          "footguns": [
+            "asserting no invariants (a fuzzer with nothing to check finds nothing)",
+            "fuzzing only the happy path"
+          ]
+        },
+        "assessment": "the fuzz target catches a reintroduced bug; the clean program passes",
+        "difficulty": 3,
+        "fading": "completion",
+        "dominant_job": "show-how",
+        "voice_notes": "testing-thread escalation; cite the Trident tool name as grounded in research.",
+        "est_length": "1300 words / ~13 min"
+      },
+      "research": {
+        "lesson_id": "fuzzing-with-trident",
+        "status": "gathering",
+        "source_priority": [
+          "solana-dev",
+          "context7"
+        ],
+        "claims": [
+          {
+            "id": "C1",
+            "claim": "Trident is a Rust-based fuzzing framework for Solana/Anchor programs.",
+            "kind": "concept",
+            "mcp": "context7",
+            "query": "Trident Solana fuzzing framework Ackee",
+            "verify": "name + that it targets Anchor programs; confirm current entrypoint/macro names",
+            "status": "verified",
+            "evidence": "Ackee Trident docs (verified via MCP during authoring)",
+            "value": null
+          },
+          {
+            "id": "C2",
+            "claim": "The current Anchor-native fuzzing path may be `anchor fuzz` / Crucible; confirm which to teach.",
+            "kind": "api",
+            "mcp": "solana-dev",
+            "query": "anchor fuzz Crucible Trident current fuzzing",
+            "verify": "decide canonical tool for this cohort; record the exact invocation",
+            "status": "gathering",
+            "evidence": "TODO: confirm before writing the lab",
+            "value": null
+          }
+        ],
+        "code_to_ground": [
+          {
+            "id": "K1",
+            "what": "Trident fuzz target + invariant assertion",
+            "autofixer": "required",
+            "status": "gathering"
+          }
+        ],
+        "open_questions": [
+          "Teach Trident, or the newer anchor-native fuzzing path? Confirm via the kit before the lab."
+        ],
+        "frozen_facts": [
+          "Fuzzing asserts invariants over many generated inputs; it complements, never replaces, targeted tests.",
+          "A fuzzer only finds violations of the invariants you actually assert."
+        ]
+      }
+    },
+    {
+      "id": "capstone-audit-ctf",
+      "module": "module-fuzz-and-audit",
+      "order": 2,
+      "brief": {
+        "id": "capstone-audit-ctf",
+        "title": "Audit an unfamiliar program (the CTF)",
+        "objectives": [
+          {
+            "bloom": "evaluate",
+            "statement": "audit an unfamiliar program: find the planted bugs, ship fixes, and add a fuzz test"
+          }
+        ],
+        "prerequisites": [
+          "fuzzing-with-trident"
+        ],
+        "hook": "Here's a program you've never seen, with several planted vulnerabilities. Find them, fix them, and prove it — exactly like a real engagement.",
+        "concept_spec": "Integration: apply the full checklist (signer/owner, PDA/bump, arithmetic, CPI) to unfamiliar code, then back the fixes with a fuzz test. No new primitive — this is the consolidation.",
+        "artifact_spec": "An unfamiliar vulnerable program; the learner produces a findings list, a fixed version, and a fuzz test that catches a regression.",
+        "exercise_spec": "Solo: audit, fix, and fuzz. Accept: all planted bugs identified and fixed; the fuzz test catches a reintroduced bug; legitimate paths pass.",
+        "the_tradeoff": "A timed CTF rewards pattern-matching speed, BUT real audits also need the patience to read the boring code — the planted bugs hide where attention drops.",
+        "just_in_time": {
+          "define": [],
+          "footguns": [
+            "stopping at the first bug",
+            "fixing a symptom instead of the missing check"
+          ]
+        },
+        "assessment": "all planted vulns found + fixed; a fuzz test catches a regression; findings written up",
+        "difficulty": 3,
+        "fading": "solo",
+        "dominant_job": "motivate",
+        "voice_notes": "course close; spine carries it; celebrate the auditor's eye, name the trade-off of speed vs patience.",
+        "est_length": "1000 words / ~10 min"
+      }
+    }
+  ],
+  "cadence": {
+    "pedagogy": {
+      "fading_schedule": [
+        {
+          "lesson": "the-exploit-mindset",
+          "mode": "worked",
+          "difficulty": 2
+        },
+        {
+          "lesson": "signer-and-owner-checks",
+          "mode": "worked",
+          "difficulty": 2
+        },
+        {
+          "lesson": "pda-and-bump-safety",
+          "mode": "completion",
+          "difficulty": 2
+        },
+        {
+          "lesson": "arithmetic-and-cpi-safety",
+          "mode": "completion",
+          "difficulty": 3
+        },
+        {
+          "lesson": "fuzzing-with-trident",
+          "mode": "completion",
+          "difficulty": 3
+        },
+        {
+          "lesson": "capstone-audit-ctf",
+          "mode": "solo",
+          "difficulty": 3
+        }
+      ],
+      "difficulty_curve": [
+        2,
+        2,
+        2,
+        3,
+        3,
+        3
+      ],
+      "worked_examples_removed_after": "module-defense",
+      "spiral": [
+        {
+          "skill": "account-validation",
+          "reappears_in": [
+            "pda-and-bump-safety",
+            "arithmetic-and-cpi-safety",
+            "capstone-audit-ctf"
+          ]
+        },
+        {
+          "skill": "pda-security",
+          "reappears_in": [
+            "arithmetic-and-cpi-safety",
+            "capstone-audit-ctf"
+          ]
+        }
+      ],
+      "retrieval_checkpoints": [
+        "checkpoint-big-four"
+      ],
+      "cumulative_checkpoint_before": "capstone-audit-ctf"
+    },
+    "release": {
+      "mode": "cohort-paced",
+      "start_date": "2026-07-06",
+      "timezone": "America/Sao_Paulo",
+      "schedule": [
+        {
+          "week": 1,
+          "publish": [
+            "the-exploit-mindset",
+            "signer-and-owner-checks"
+          ],
+          "est_effort_hours": 6
+        },
+        {
+          "week": 2,
+          "publish": [
+            "pda-and-bump-safety",
+            "arithmetic-and-cpi-safety"
+          ],
+          "est_effort_hours": 8
+        },
+        {
+          "week": 3,
+          "publish": [
+            "fuzzing-with-trident",
+            "capstone-audit-ctf"
+          ],
+          "est_effort_hours": 10
+        }
+      ],
+      "per_lesson_effort": [
+        {
+          "lesson": "fuzzing-with-trident",
+          "draft_words": 1300,
+          "research_hours": 2,
+          "write_hours": 2,
+          "review_hours": 1.5
+        }
+      ],
+      "freshness_policy": {
+        "onchain_numbers_restale_after_days": 60,
+        "applies_to": [
+          "fuzzing-with-trident"
+        ]
+      }
+    }
+  },
+  "assessment": {
+    "model": "capstone+ctf",
+    "gate_principle": "Completion is gated on finding, fixing, and fuzzing real bugs — never on watching.",
+    "proof_matrix": [
+      {
+        "outcome": "to-find-fix-vulns",
+        "proven_by": "checkpoint-big-four",
+        "evidence": "spot-the-bug checkpoint across the four classes"
+      },
+      {
+        "outcome": "to-audit-program",
+        "proven_by": "capstone-audit-ctf",
+        "evidence": "findings list + fixed program + passing fuzz test"
+      }
+    ],
+    "checkpoints": [
+      {
+        "id": "checkpoint-big-four",
+        "after_module": "module-arith-cpi",
+        "type": "mini-build",
+        "spec": "Given three snippets, identify the missing check (owner / canonical-bump / checked-math) and fix one."
+      }
+    ],
+    "cumulative_checkpoint": {
+      "after_module": "module-arith-cpi",
+      "spec": "Re-harden a fresh small program across all four vulnerability classes before the fuzz+audit capstone."
+    },
+    "capstone": {
+      "id": "capstone-audit-ctf",
+      "statement": "Audit an unfamiliar program: find the planted bugs, ship fixes, and add a fuzz test that catches a regression.",
+      "requires_skills": [
+        "account-validation",
+        "pda-security",
+        "arithmetic-safety",
+        "cpi-security",
+        "fuzzing"
+      ],
+      "rubric": [
+        "all planted vulnerabilities identified",
+        "each fix adds the missing check (not a symptom patch)",
+        "a fuzz test catches a reintroduced bug",
+        "legitimate paths still pass"
+      ],
+      "credential": "on-chain-NFT",
+      "traces_to": [
+        "to-find-fix-vulns",
+        "to-audit-program"
+      ]
+    }
+  }
+}

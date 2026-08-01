@@ -1,0 +1,30 @@
+lesson:
+  id: pda-and-bump-safety
+  title: "Canonical bumps and seed hygiene"
+  objectives:
+    - bloom: explain
+      statement: "explain why a non-canonical bump is a forgery and why seed schemes must be validated"
+    - bloom: implement
+      statement: "store and check the canonical bump and validate seeds"
+  prerequisites:
+    - signer-and-owner-checks
+    - account-validation
+  hook: "Your PDA derivation 'worked' in testing. But an attacker can pass a different valid bump, or craft seeds that collide with another user's account. Why does Solana even allow that?"
+  concept_spec: "Canonical vs non-canonical bumps; storing the bump; validating user-influenced seeds. Derive WHY find_program_address returns the canonical bump and why accepting any bump is exploitable. One new element: bump canonicalization."
+  artifact_spec: "Harden the vault's PDA: store the canonical bump on init, check it on use, and reject crafted seeds."
+  exercise_spec: "Completion: replace the accepted-bump arg with the stored canonical bump (TODO). Solo: write a test that tries a non-canonical bump and must fail. Accept: forged-bump and colliding-seed attempts revert."
+  the_tradeoff: "Storing the bump costs a byte and a check, BUT recomputing or trusting a passed-in bump is both slower and a security hole — the canonical bump is the only safe one."
+  just_in_time:
+    define:
+      - canonical-bump
+      - non-canonical-bump
+      - seed-collision
+    footguns:
+      - "accepting a bump as an instruction arg"
+      - "user-controlled seeds without a namespace"
+  assessment: "anchor test: forged-bump and colliding-seed attacks revert; legitimate access works"
+  difficulty: 2
+  fading: completion
+  dominant_job: derive-why
+  voice_notes: "contested/intricate design → Vitalik craft over spine; derive why canonical bump is the only safe one."
+  est_length: "1400 words / ~14 min"

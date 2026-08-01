@@ -1,0 +1,31 @@
+lesson:
+  id: arithmetic-and-cpi-safety
+  title: "Overflow and the programs you call"
+  objectives:
+    - bloom: implement
+      statement: "replace unchecked arithmetic with checked operations"
+    - bloom: implement
+      statement: "validate a CPI target program id to prevent arbitrary CPI"
+  prerequisites:
+    - pda-and-bump-safety
+    - pda-security
+  hook: "A u64 that wraps from zero to four billion, and a 'token program' the caller gets to choose. Two of the nastiest Solana exploits hide in plain arithmetic and one unchecked address."
+  concept_spec: "Checked arithmetic (checked_add/sub/mul) vs silent overflow; arbitrary-CPI (validating the program id you invoke). One new element per beat: overflow, then CPI target validation."
+  artifact_spec: "Harden the vault: make all balance math checked, and validate the token program id before the deposit CPI."
+  exercise_spec: "Completion: swap the + for checked_add returning an error (TODO). Solo: add a program-id check before the CPI. Accept: an overflow test reverts; a swapped-program CPI reverts."
+  the_tradeoff: "Checked math and program-id validation add a few lines and a few compute units, BUT skipping them is how vaults get drained — correctness beats the micro-optimization here."
+  just_in_time:
+    define:
+      - checked-arithmetic
+      - arbitrary-cpi
+      - program-id-validation
+    footguns:
+      - "as casts that truncate"
+      - "invoking a caller-supplied program id"
+      - "trusting a token account's mint without checking"
+  assessment: "anchor test: overflow path reverts; a substituted CPI program reverts"
+  difficulty: 3
+  fading: completion
+  dominant_job: show-how
+  voice_notes: "documented mechanisms → Helius expository; two clean beats, one new element each."
+  est_length: "1400 words / ~14 min"

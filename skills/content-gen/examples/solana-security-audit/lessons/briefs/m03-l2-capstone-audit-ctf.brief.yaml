@@ -1,0 +1,24 @@
+lesson:
+  id: capstone-audit-ctf
+  title: "Audit an unfamiliar program (the CTF)"
+  objectives:
+    - bloom: evaluate
+      statement: "audit an unfamiliar program: find the planted bugs, ship fixes, and add a fuzz test"
+  prerequisites:
+    - fuzzing-with-trident
+  hook: "Here's a program you've never seen, with several planted vulnerabilities. Find them, fix them, and prove it — exactly like a real engagement."
+  concept_spec: "Integration: apply the full checklist (signer/owner, PDA/bump, arithmetic, CPI) to unfamiliar code, then back the fixes with a fuzz test. No new primitive — this is the consolidation."
+  artifact_spec: "An unfamiliar vulnerable program; the learner produces a findings list, a fixed version, and a fuzz test that catches a regression."
+  exercise_spec: "Solo: audit, fix, and fuzz. Accept: all planted bugs identified and fixed; the fuzz test catches a reintroduced bug; legitimate paths pass."
+  the_tradeoff: "A timed CTF rewards pattern-matching speed, BUT real audits also need the patience to read the boring code — the planted bugs hide where attention drops."
+  just_in_time:
+    define: []
+    footguns:
+      - "stopping at the first bug"
+      - "fixing a symptom instead of the missing check"
+  assessment: "all planted vulns found + fixed; a fuzz test catches a regression; findings written up"
+  difficulty: 3
+  fading: solo
+  dominant_job: motivate
+  voice_notes: "course close; spine carries it; celebrate the auditor's eye, name the trade-off of speed vs patience."
+  est_length: "1000 words / ~10 min"

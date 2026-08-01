@@ -1,0 +1,83 @@
+schema_version: 1
+course_id: solana-program-security-audit
+lifecycle:
+  - briefed
+  - researched
+  - drafted
+  - verified
+  - published
+lessons:
+  - id: the-exploit-mindset
+    module: module-offense
+    order: 1
+    status: briefed
+    brief: lessons/briefs/m00-l1-the-exploit-mindset.brief.yaml
+    research: null
+    facts: null
+    draft: null
+    dominant_job: show-how
+    blocked_by: []
+  - id: signer-and-owner-checks
+    module: module-defense
+    order: 2
+    status: briefed
+    brief: lessons/briefs/m01-l1-signer-and-owner-checks.brief.yaml
+    research: null
+    facts: null
+    draft: null
+    dominant_job: show-how
+    blocked_by:
+      - the-exploit-mindset
+  - id: pda-and-bump-safety
+    module: module-defense
+    order: 3
+    status: briefed
+    brief: lessons/briefs/m01-l2-pda-and-bump-safety.brief.yaml
+    research: null
+    facts: null
+    draft: null
+    dominant_job: derive-why
+    blocked_by:
+      - signer-and-owner-checks
+  - id: arithmetic-and-cpi-safety
+    module: module-arith-cpi
+    order: 4
+    status: briefed
+    brief: lessons/briefs/m02-l1-arithmetic-and-cpi-safety.brief.yaml
+    research: null
+    facts: null
+    draft: null
+    dominant_job: show-how
+    blocked_by:
+      - pda-and-bump-safety
+  - id: fuzzing-with-trident
+    module: module-fuzz-and-audit
+    order: 5
+    status: briefed
+    brief: lessons/briefs/m03-l1-fuzzing-with-trident.brief.yaml
+    research: lessons/research/m03-l1-fuzzing-with-trident.research.yaml
+    facts: lessons/facts/m03-l1-fuzzing-with-trident.facts.md
+    draft: null
+    dominant_job: show-how
+    blocked_by:
+      - arithmetic-and-cpi-safety
+  - id: capstone-audit-ctf
+    module: module-fuzz-and-audit
+    order: 6
+    status: briefed
+    brief: lessons/briefs/m03-l2-capstone-audit-ctf.brief.yaml
+    research: null
+    facts: null
+    draft: null
+    dominant_job: motivate
+    blocked_by:
+      - fuzzing-with-trident
+summary:
+  total: 6
+  by_status:
+    briefed: 6
+    researched: 0
+    drafted: 0
+    verified: 0
+    published: 0
+  next_to_write: the-exploit-mindset

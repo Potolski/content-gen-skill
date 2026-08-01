@@ -1,0 +1,27 @@
+lesson:
+  id: signer-and-owner-checks
+  title: "Signer and owner checks: the cheap fixes that matter most"
+  objectives:
+    - bloom: implement
+      statement: "add signer and owner checks that close an authorization hole"
+  prerequisites:
+    - the-exploit-mindset
+  hook: "The drain you just wrote worked because the program never checked who was calling or who owned the account. Two lines would have stopped it. Let's add them — and see them block your exploit."
+  concept_spec: "Signer checks (is_signer) and owner checks (account.owner == expected program). Build it twice: the native check, then the Anchor constraint that generates it. One new element: the owner check."
+  artifact_spec: "Harden the vault: require the authority to sign and validate account ownership; re-run the exploit and watch it fail."
+  exercise_spec: "Completion: add the missing has_one / signer constraint (TODO). Solo: add an owner check on a second account. Accept: the previous exploit test now fails; the legitimate path passes."
+  the_tradeoff: "Anchor constraints make these checks declarative and hard to forget, BUT they hide what's enforced — knowing the native check is what lets you audit code that doesn't use them."
+  just_in_time:
+    define:
+      - signer-check
+      - owner-check
+      - has_one
+    footguns:
+      - "checking is_signer but not owner"
+      - "trusting Anchor to add a check you never declared"
+  assessment: "anchor test: the exploit now reverts; the authorized path still works"
+  difficulty: 2
+  fading: worked
+  dominant_job: show-how
+  voice_notes: "build-it-twice guest: native check then Anchor constraint; the 'two lines' callback to the exploit is the seam."
+  est_length: "1300 words / ~13 min"
