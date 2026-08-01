@@ -100,13 +100,16 @@ whether it MUST ground against live sources.
     packet and note the human accuracy gate.
 13. **(Optional) Interactive plugins + Academy publish.** For platform-bound courses, author
     per-lesson `quiz_blocks` and (Rust/TS lessons) `coding_challenges` in the manifest briefs
-    (lesson-brief-schema §H), then project to the Academy publish tree and prove the challenge
-    contract:
+    (lesson-brief-schema §H — vary correct-answer positions; the validator hard-fails one-slot
+    skew), then project to the Academy publish tree and prove the challenge contract:
     ```bash
-    python3 "$SKILL/tools/validate_course.py" all --course content/courses/<id>   # runs quiz+challenge checks
+    python3 "$SKILL/tools/validate_course.py" all --course content/courses/<id>   # quiz (incl. answer spread) + challenge checks
     python3 "$SKILL/tools/academy_export.py" emit --course content/courses/<id> --out content/academy/courses/<slug>
     python3 "$SKILL/tools/verify_challenges.py" content/courses/<id>              # starter fails / solution passes
     ```
+    The export embeds each lesson's rendered visuals as `![alt](assets/vNN-*.png)` and copies the
+    PNGs + HTML sources — so the Step-12 visual pass (render_visuals.py) must have run first, or
+    visuals degrade to blockquote placeholders with warnings.
     Additive: the export writes only under `content/academy/`; the source course is untouched.
     Contract + schema in `references/academy-schema.md`.
 

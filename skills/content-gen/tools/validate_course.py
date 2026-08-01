@@ -150,6 +150,9 @@ def check_quiz_blocks(b: dict, lid: str) -> list[str]:
             opts = q.get("options") or []
             if len(opts) < 2:
                 flags.append(f"{HARD}brief {where} q'{qid}' needs ≥2 options")
+            elif len(opts) < 3:
+                flags.append(f"{ADV}brief {where} q'{qid}' has only 2 options — published courses "
+                             f"use 3 (a coin-flip quiz gates nothing)")
             oids = [str((o or {}).get("id", "")).strip() for o in opts]
             if any(not oid for oid in oids):
                 flags.append(f"{HARD}brief {where} q'{qid}' has an option with no id "
@@ -170,6 +173,48 @@ def check_quiz_blocks(b: dict, lid: str) -> list[str]:
                                  f"feedback (the platform shows it on a wrong pick)")
             if not str(q.get("explanation", "")).strip():
                 flags.append(f"{ADV}brief {where} q'{qid}' has no explanation")
+    return flags
+
+
+def check_quiz_distribution(m: dict) -> list[str]:
+    """Course-level answer-POSITION audit across every single-select quiz question.
+    Correctness is keyed to option id, but a learner sees positions — when the correct
+    answer sits in the same slot lesson after lesson (the all-'A' failure that shipped
+    once), the whole course is guessable without reading. HARD on >50% one-slot skew
+    once the sample is meaningful (≥6 questions); ADVISORY on the other classic tell,
+    the correct option being the longest label. Target: a roughly even spread."""
+    positions: list[int] = []
+    longest = 0
+    for l in m.get("lessons", []):
+        for qb in (l.get("brief", {}) or {}).get("quiz_blocks") or []:
+            for q in (qb or {}).get("questions") or []:
+                q = q or {}
+                if q.get("multiSelect"):
+                    continue
+                opts = [o or {} for o in (q.get("options") or [])]
+                idx = [i for i, o in enumerate(opts) if o.get("correct") is True]
+                if len(idx) != 1:
+                    continue  # structural breakage is already HARD in check_quiz_blocks
+                positions.append(idx[0])
+                lens = [len(str(o.get("label", ""))) for o in opts]
+                if len(lens) >= 2 and lens[idx[0]] == max(lens) and lens.count(max(lens)) == 1:
+                    longest += 1
+    n = len(positions)
+    if n < 6:
+        return []
+    flags: list[str] = []
+    counts: dict[int, int] = {}
+    for p in positions:
+        counts[p] = counts.get(p, 0) + 1
+    top_pos, top_n = max(counts.items(), key=lambda kv: kv[1])
+    if top_n / n > 0.5:
+        dist = {p + 1: c for p, c in sorted(counts.items())}
+        flags.append(f"{HARD}quiz correct answers are position-skewed: {top_n}/{n} sit at option "
+                     f"position {top_pos + 1} (distribution {dist}) — spread them roughly evenly; "
+                     f"a fixed slot makes every quiz guessable without reading")
+    if longest / n > 0.7:
+        flags.append(f"{ADV}the correct option has the longest label in {longest}/{n} single-select "
+                     f"questions — write distractors matching the answer's length and register")
     return flags
 
 
@@ -293,6 +338,7 @@ def check_briefs(m: dict) -> dict:
         # Optional Academy plugins (additive): validate their specs if present.
         flags += check_quiz_blocks(b, lid)
         flags += check_coding_challenges(b, lid)
+    flags += check_quiz_distribution(m)
     return _result("briefs", flags)
 
 
@@ -1002,19 +1048,53 @@ def selftest() -> int:
     qg = _good_manifest()
     qg["lessons"][0]["brief"]["quiz_blocks"] = [{"questions": [
         {"id": "q1", "prompt": "Base unit of SOL?", "multiSelect": False,
-         "options": [{"id": "a", "label": "Lamport", "correct": True},
-                     {"id": "b", "label": "Gwei", "correct": False, "feedback": "Ethereum's."}],
+         "options": [{"id": "a", "label": "Gwei", "correct": False, "feedback": "Ethereum's."},
+                     {"id": "b", "label": "Lamport", "correct": True},
+                     {"id": "c", "label": "Satoshi", "correct": False, "feedback": "Bitcoin's."}],
          "explanation": "One SOL is 1e9 lamports."}]}]
     check(not check_briefs(qg)["hard"], "good quiz_blocks -> briefs clean")
     # single-select with two correct is HARD
     q2 = copy.deepcopy(qg)
-    q2["lessons"][0]["brief"]["quiz_blocks"][0]["questions"][0]["options"][1]["correct"] = True
+    q2["lessons"][0]["brief"]["quiz_blocks"][0]["questions"][0]["options"][0]["correct"] = True
     check(any("exactly one correct" in f for f in check_briefs(q2)["flags"]),
           "single-select with two correct -> briefs HARD")
     # a missing option id is HARD (correctness keyed to id)
     q3 = copy.deepcopy(qg)
     q3["lessons"][0]["brief"]["quiz_blocks"][0]["questions"][0]["options"][0].pop("id")
     check(check_briefs(q3)["hard"], "quiz option with no id -> briefs HARD")
+    # only 2 options is an advisory (published courses use 3)
+    q4 = copy.deepcopy(qg)
+    q4["lessons"][0]["brief"]["quiz_blocks"][0]["questions"][0]["options"].pop()
+    check(any("only 2 options" in f for f in check_briefs(q4)["flags"])
+          and not check_briefs(q4)["hard"], "2-option question -> advisory, not HARD")
+
+    # course-wide answer-position skew: all-correct-at-slot-1 is HARD once n ≥ 6
+    def _q(qid, correct_at):
+        opts = [{"id": oid, "label": f"opt {oid}", "correct": i == correct_at,
+                 **({} if i == correct_at else {"feedback": "no"})}
+                for i, oid in enumerate("abc")]
+        return {"id": qid, "prompt": f"{qid}?", "options": opts, "explanation": "e"}
+    sk = _good_manifest()
+    sk["lessons"][0]["brief"]["quiz_blocks"] = [{"questions": [_q(f"q{i}", 0) for i in range(6)]}]
+    check(any("position-skewed" in f for f in check_briefs(sk)["flags"]),
+          "6 questions all correct at position 1 -> skew HARD")
+    sk["lessons"][0]["brief"]["quiz_blocks"] = [{"questions": [_q(f"q{i}", i % 3) for i in range(6)]}]
+    check(not any("position-skewed" in f for f in check_briefs(sk)["flags"]),
+          "even correct-position spread -> no skew flag")
+    # below the sample floor the skew gate stays quiet
+    sk["lessons"][0]["brief"]["quiz_blocks"] = [{"questions": [_q(f"q{i}", 0) for i in range(5)]}]
+    check(not any("position-skewed" in f for f in check_briefs(sk)["flags"]),
+          "5 questions -> under sample floor, no skew flag")
+    # longest-label tell is advisory
+    lt = _good_manifest()
+    lqs = []
+    for i in range(7):
+        qq = _q(f"q{i}", i % 3)
+        qq["options"][i % 3]["label"] = "a much longer and more detailed correct answer label"
+        lqs.append(qq)
+    lt["lessons"][0]["brief"]["quiz_blocks"] = [{"questions": lqs}]
+    check(any("longest label" in f for f in check_briefs(lt)["flags"]),
+          "correct-is-always-longest -> advisory")
 
     # a good coding_challenge SPEC keeps briefs clean (file existence checked separately)
     cg2 = _good_manifest()

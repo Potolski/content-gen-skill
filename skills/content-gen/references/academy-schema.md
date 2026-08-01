@@ -93,17 +93,24 @@ blocks:
   type: quiz
   questions:
     - id: q1                             # stable; correctness is keyed to option id, never position
-      prompt: "Which accounts store state?"
-      multiSelect: true                  # default false
-      options:                           # ≥ 2; each {id, label, correct}, optional feedback (on wrong)
-        - { id: a, label: Data accounts, correct: true }
-        - { id: b, label: Instructions, correct: false, feedback: "Inputs, not accounts." }
+      prompt: "Which of these stores state?"
+      multiSelect: false                 # default false
+      options:                           # 3 preferred (≥2 min); each {id, label, correct}, feedback on wrong
+        - { id: a, label: Instructions, correct: false, feedback: "Inputs, not storage." }
+        - { id: b, label: Programs, correct: false, feedback: "Stateless by design — code only." }
+        - { id: c, label: Data accounts, correct: true }
       explanation: "..."                 # optional but expected; shown after answering
 ```
 - `multiSelect: false` → **exactly one** `correct: true`; `true` → **≥ 1**.
-- Put `feedback` on every wrong option and a substantive `explanation` on every question (quality bar:
-  see `courses/building-your-first-solana-program/lessons/what-you-built` — scenario prompts, one correct,
-  per-distractor feedback, a paragraph explanation).
+- Put `feedback` on every wrong option and a substantive `explanation` on every question.
+- **Authoring bar** (matches the published `btc-to-sol-evolution` course): scenario-driven, often
+  two-part prompts ("what property is that, and why does it matter?") tied to something the learner
+  just ran; 3 options; distractors are real plausible misconceptions matched to the answer in length
+  and register — never joke options, never a giveaway-long correct label.
+- **Vary the correct answer's position roughly evenly across the course.** Correctness is id-keyed,
+  but learners see slots: a course where the right answer always sits first is guessable without
+  reading (this shipped once — 33/33 on 'a'). `validate_course.py` HARD-fails >50% one-slot skew
+  across ≥6 single-select questions and advises when the correct label is consistently the longest.
 
 ## Code block — the three test modes
 
@@ -163,9 +170,21 @@ the starter fails at least one.** How a case is evaluated depends on the mode:
   `wallet-funding` produces `funded-wallet`; only a `deployable` code block produces `deployed-program`.
 - **No orphan files;** **quiz correctness keyed to stable option ids;** **`openEnded` never graded.**
 
+## Images
+Images live in a per-lesson `assets/` folder and are embedded from prose markdown with a relative
+link and a full-sentence alt (the accessibility caption): `![alt sentence](assets/v01-diagram.png)`.
+Upstream CI enforces **no orphan files** — every asset must be referenced from a block or prose.
+A course may also keep the HTML sources that generated its images in a course-level `visual-src/`
+folder (`visual-src/<lesson>/vNN-<kind>.html` + shared `_brand.css`/`_render.css`); it is
+linter-ignored and never published, kept so visuals stay re-renderable from the repo.
+
 ## How ContentGen maps onto this (the export)
 - `course-<internal-id>` (≤32 chars) / `lesson-<prefix>-<internal-id>`; module `key` = internal module slug.
-- **prose** ← the written `lessons/drafts/<lesson>.md` (visual specs stay as fenced ```visual blocks).
+- **prose** ← the written `lessons/drafts/<lesson>.md`. The Nth ```visual spec becomes
+  `![alt](assets/vNN-<type>.png)` when its render exists in `lessons/assets/<stem>/` (run
+  `render_visuals.py` BEFORE exporting); an unrendered spec degrades to a blockquote + warning.
+- **assets** ← rendered `lessons/assets/<stem>/vNN-*.png` are copied to `lessons/<slug>/assets/`;
+  the HTML sources + shared `_brand.css`/`_render.css` are copied to `visual-src/`.
 - **quiz** ← the lesson brief's `quiz_blocks` (see `lesson-brief-schema.md` §C).
 - **code** ← the lesson brief's `coding_challenges`; each challenge's `starter`/`solution`/`tests` files are
   copied into `<challenge-id>/` under the lesson dir. `language ∈ {rust, typescript}` only — Bitcoin/CLI/

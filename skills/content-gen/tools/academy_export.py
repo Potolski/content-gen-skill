@@ -9,8 +9,10 @@ block-based shape (references/academy-schema.md). This tool is the one-way proje
     content/courses/<id>/                academy/courses/<slug>/
       manifest.json          ──────▶       course.yaml
       lessons/drafts/*.md                   lessons/<slug>/lesson.yaml   (blocks: prose + quiz + code)
-      (brief.quiz_blocks)                   lessons/<slug>/intro.md
+      (brief.quiz_blocks)                   lessons/<slug>/intro.md      (visuals → ![alt](assets/vNN-*.png))
       (brief.coding_challenges)             lessons/<slug>/<challenge>/{starter,solution}.{rs,ts},tests.json
+      lessons/assets/<stem>/vNN-*.png       lessons/<slug>/assets/vNN-*.png
+      lessons/assets/<stem>/vNN-*.html      visual-src/<slug>/vNN-*.html  (+ shared _brand/_render.css)
 
 It is ADDITIVE: it reads the course dir read-only and writes only into --out. The
 source course is never mutated. Publish-only metadata (creator wallet, difficulty,
@@ -53,15 +55,31 @@ def _draft_stem(mod_idx: int, order, lid: str) -> str:
     return f"m{mod_idx:02d}-l{order}-{_safe(lid)}"
 
 
-def _prose_from_draft(md: str) -> str:
-    """Project a written draft into an Academy prose `.md`. Lossless of prose; a
-    ```visual spec (a placeholder, not an image) becomes a readable blockquote carrying
-    its title + alt so no learner-facing meaning is lost and no orphan image is created.
-    (Embedding rendered PNGs is a later enhancement — see references/academy-schema.md.)"""
-    out, i, lines = [], 0, md.split("\n")
+def _asset_pngs(asset_dir: Path) -> dict[int, str]:
+    """Map visual ordinal → rendered PNG filename in a lesson's asset dir
+    (render_visuals.py names them v<NN>-<type>.png, NN = Nth ```visual spec)."""
+    out: dict[int, str] = {}
+    if asset_dir.is_dir():
+        for p in sorted(asset_dir.glob("v*.png")):
+            mt = re.match(r"v(\d+)-", p.name)
+            if mt:
+                out[int(mt.group(1))] = p.name
+    return out
+
+
+def _prose_from_draft(md: str, pngs: dict[int, str] | None = None,
+                      warnings: list[str] | None = None, where: str = "") -> str:
+    """Project a written draft into an Academy prose `.md`. Lossless of prose; the Nth
+    ```visual spec becomes a markdown image embed of its rendered PNG
+    (`![alt](assets/vNN-<type>.png)`, the Academy convention — courses/README.md there).
+    A spec with no rendered PNG degrades to a blockquote carrying its title + alt, so no
+    learner-facing meaning is lost and no orphan image reference is created."""
+    pngs = pngs or {}
+    out, i, n, lines = [], 0, 0, md.split("\n")
     while i < len(lines):
         s = lines[i].strip()
         if s == "```visual":
+            n += 1
             j, body = i + 1, []
             while j < len(lines) and lines[j].strip() != "```":
                 body.append(lines[j]); j += 1
@@ -72,7 +90,14 @@ def _prose_from_draft(md: str) -> str:
                     spec[mt.group(1)] = mt.group(2).strip()
             title = spec.get("title", spec.get("type", "diagram"))
             alt = spec.get("alt", "").strip()
-            out.append(f"> **Visual — {title}.**" + (f" {alt}" if alt else ""))
+            png = pngs.get(n)
+            if png:
+                out.append(f"![{alt or title}](assets/{png})")
+            else:
+                if warnings is not None:
+                    warnings.append(f"{where}: visual {n} ('{title}') has no rendered PNG — "
+                                    f"blockquote placeholder emitted (run render_visuals.py first)")
+                out.append(f"> **Visual — {title}.**" + (f" {alt}" if alt else ""))
             i = j + 1
         else:
             out.append(lines[i]); i += 1
@@ -168,14 +193,27 @@ def plan_academy(course_dir: Path, cfg: dict, m: dict) -> tuple[dict[str, str], 
         mod = next((mm for mm in modules if mm["id"] == l.get("module")), {})
         ldir = f"lessons/{slug}"
 
-        # prose from the written draft
+        # prose from the written draft, with rendered visuals embedded as images
         stem = _draft_stem(mod_idx.get(l.get("module"), 99), l.get("order", 0), lid)
         draft = course_dir / "lessons" / "drafts" / f"{stem}.md"
+        asset_dir = course_dir / "lessons" / "assets" / stem
+        pngs = _asset_pngs(asset_dir)
         if draft.is_file():
-            files[f"{ldir}/intro.md"] = _prose_from_draft(draft.read_text("utf-8"))
+            text = draft.read_text("utf-8")
+            n_specs = sum(1 for ln in text.split("\n") if ln.strip() == "```visual")
+            if pngs and len(pngs) != n_specs:
+                warnings.append(f"{lid}: {n_specs} visual spec(s) but {len(pngs)} rendered "
+                                f"PNG(s) in assets/{stem}/ — spec↔render join is positional, re-render")
+            files[f"{ldir}/intro.md"] = _prose_from_draft(text, pngs, warnings, lid)
         else:
             warnings.append(f"no draft for {lid} ({stem}.md) — emitting placeholder prose")
             files[f"{ldir}/intro.md"] = f"# {brief.get('title', lid)}\n\n_(draft pending)_\n"
+        # rendered images ship beside the lesson; HTML sources stay re-renderable under
+        # course-level visual-src/ (linter-ignored upstream, never published)
+        for _, name in sorted(pngs.items()):
+            copies.append((str((asset_dir / name).resolve()), f"{ldir}/assets/{name}"))
+        for html in sorted(asset_dir.glob("v*.html")) if asset_dir.is_dir() else []:
+            copies.append((str(html.resolve()), f"visual-src/{slug}/{html.name}"))
 
         blocks: list[dict] = [{"key": "intro", "type": "prose", "src": "intro.md"}]
 
@@ -223,6 +261,15 @@ def plan_academy(course_dir: Path, cfg: dict, m: dict) -> tuple[dict[str, str], 
         lesson_doc["blocks"] = blocks
         files[f"{ldir}/lesson.yaml"] = to_yaml(lesson_doc)
 
+    # shared stylesheets the visual-src HTML links as ../_brand.css / ../_render.css
+    if any(rel.startswith("visual-src/") for _, rel in copies):
+        for css in ("_brand.css", "_render.css"):
+            f = course_dir / "lessons" / "assets" / css
+            if f.is_file():
+                copies.append((str(f.resolve()), f"visual-src/{css}"))
+            else:
+                warnings.append(f"visual-src: shared {css} missing from lessons/assets/")
+
     return files, warnings, copies
 
 
@@ -245,8 +292,10 @@ def emit(course_dir: str, out_dir: str, opts: dict, force: bool) -> int:
         written += 1
     for w in warnings:
         print(f"  warn: {w}", file=sys.stderr)
+    n_refs = sum(f.count("](assets/") for rel, f in files.items() if rel.endswith("intro.md"))
+    n_pngs = sum(1 for _, rel in copies if "/assets/" in rel and rel.endswith(".png"))
     print(f"academy emit: {written} files → {out}/  (course {cfg['course_id']}, {len(files)} generated, "
-          f"{len(copies)} copied, {len(warnings)} warning(s))")
+          f"{len(copies)} copied, images {n_refs} referenced/{n_pngs} copied, {len(warnings)} warning(s))")
     if cfg["creator"] == "REPLACE_WITH_YOUR_SOLANA_WALLET":
         print("  NOTE: set course.creator to a real Solana wallet before publishing "
               "(manifest 'academy.creator' or --creator).", file=sys.stderr)
@@ -258,8 +307,11 @@ def check(course_dir: str, opts: dict) -> int:
     m = load_manifest(course_dir)
     cfg = _academy_cfg(m, opts)
     files, warnings, copies = plan_academy(course_dir, cfg, m)
+    n_refs = sum(f.count("](assets/") for rel, f in files.items() if rel.endswith("intro.md"))
+    n_pngs = sum(1 for _, rel in copies if "/assets/" in rel and rel.endswith(".png"))
     print(f"academy check: course '{cfg['course_id']}' → would write {len(files)} files "
-          f"+ copy {len(copies)} challenge source(s):")
+          f"+ copy {len(copies)} file(s); images: {n_refs} referenced / {n_pngs} copied"
+          + ("" if n_refs == n_pngs else "  ← MISMATCH"))
     for rel in sorted(files):
         print("   " + rel)
     for _, rel in sorted(copies, key=lambda c: c[1]):
@@ -278,12 +330,18 @@ def selftest() -> int:
         print(("PASS" if c else "FAIL") + " - " + m)
         ok = ok and c
 
-    # prose projection: visual block -> blockquote, prose preserved
-    proj = _prose_from_draft("# T\n\nhello\n\n```visual\ntype: diagram\ntitle: the flow\n"
-                             "alt: a full sentence describing the flow\n```\n\nbye\n")
+    # prose projection: rendered visual -> image embed; unrendered -> blockquote fallback
+    src = ("# T\n\nhello\n\n```visual\ntype: diagram\ntitle: the flow\n"
+           "alt: a full sentence describing the flow\n```\n\nbye\n")
+    proj = _prose_from_draft(src, {1: "v01-diagram.png"})
     chk("hello" in proj and "bye" in proj, "prose preserved")
-    chk("```visual" not in proj and "> **Visual — the flow.**" in proj
-        and "a full sentence" in proj, "visual spec -> blockquote with title+alt")
+    chk("![a full sentence describing the flow](assets/v01-diagram.png)" in proj
+        and "```visual" not in proj and "> **Visual" not in proj,
+        "rendered visual -> markdown image with alt")
+    warns: list[str] = []
+    proj = _prose_from_draft(src, {}, warns, "l1")
+    chk("> **Visual — the flow.**" in proj and "a full sentence" in proj and len(warns) == 1,
+        "unrendered visual -> blockquote fallback + warning")
 
     man = {
         "schema_version": 1,
@@ -298,15 +356,23 @@ def selftest() -> int:
                                    "tests": "ch/tests.json", "acceptance_criteria": ["adds"]}],
             "quiz_blocks": [{"key": "check", "questions": [
                 {"id": "q1", "prompt": "unit?", "options": [
-                    {"id": "a", "label": "lamport", "correct": True},
-                    {"id": "b", "label": "gwei", "correct": False, "feedback": "no"}],
+                    {"id": "a", "label": "gwei", "correct": False, "feedback": "no"},
+                    {"id": "b", "label": "lamport", "correct": True}],
                  "explanation": "1e9"}]}]}}],
     }
     with tempfile.TemporaryDirectory() as td:
         cdir = Path(td) / "course"
         (cdir / "lessons" / "drafts").mkdir(parents=True)
         (cdir / "lessons" / "drafts" / "m00-l1-the-basics.md").write_text(
-            "# The Basics\n\nbody words here\n", "utf-8")
+            "# The Basics\n\nbody words here\n\n```visual\ntype: diagram\ntitle: the flow\n"
+            "alt: the whole flow at a glance\n```\n\n```visual\ntype: table\ntitle: unrendered\n"
+            "```\n\nmore words\n", "utf-8")
+        adir = cdir / "lessons" / "assets" / "m00-l1-the-basics"
+        adir.mkdir(parents=True)
+        (adir / "v01-diagram.png").write_bytes(b"\x89PNG fake")
+        (adir / "v01-diagram.html").write_text("<html>viz</html>", "utf-8")
+        (cdir / "lessons" / "assets" / "_brand.css").write_text(":root{}", "utf-8")
+        (cdir / "lessons" / "assets" / "_render.css").write_text(".viz{}", "utf-8")
         (cdir / "ch").mkdir()
         (cdir / "ch" / "starter.rs").write_text("fn add(a:i64,b:i64)->i64{0}\n", "utf-8")
         (cdir / "ch" / "solution.rs").write_text("fn add(a:i64,b:i64)->i64{a+b}\n", "utf-8")
@@ -326,8 +392,17 @@ def selftest() -> int:
             and (out / "lessons" / "the-basics" / "add-two" / "solution.rs").is_file()
             and (out / "lessons" / "the-basics" / "add-two" / "tests.json").is_file(),
             "challenge source files copied")
-        chk((out / "lessons" / "the-basics" / "intro.md").read_text().startswith("# The Basics"),
-            "intro.md carries the draft prose")
+        intro = (out / "lessons" / "the-basics" / "intro.md").read_text()
+        chk(intro.startswith("# The Basics"), "intro.md carries the draft prose")
+        chk("![the whole flow at a glance](assets/v01-diagram.png)" in intro,
+            "rendered visual embedded as image in intro.md")
+        chk("> **Visual — unrendered.**" in intro, "unrendered visual falls back to blockquote")
+        chk((out / "lessons" / "the-basics" / "assets" / "v01-diagram.png").is_file(),
+            "rendered PNG copied beside the lesson")
+        chk((out / "visual-src" / "the-basics" / "v01-diagram.html").is_file()
+            and (out / "visual-src" / "_brand.css").is_file()
+            and (out / "visual-src" / "_render.css").is_file(),
+            "HTML source + shared css exported under visual-src/")
 
     print("\n" + ("ACADEMY_EXPORT SELFTESTS PASSED" if ok else "FAILURES ABOVE"))
     return 0 if ok else 1

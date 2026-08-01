@@ -90,9 +90,12 @@ lesson:
         - id:            #   stable; correctness is keyed to this id, never option order
           prompt:
           multiSelect:   #   default false → exactly ONE correct option; true → ≥1
-          options:       #   ≥2; each {id, label, correct}; put `feedback` on every WRONG option
-            - {id: a, label: "...", correct: true}
-            - {id: b, label: "...", correct: false, feedback: "why it's wrong"}
+          options:       #   3 preferred (≥2 min); each {id, label, correct}; put `feedback` on every WRONG option
+            - {id: a, label: "...", correct: false, feedback: "why it's wrong"}
+            - {id: b, label: "...", correct: true}
+            - {id: c, label: "...", correct: false, feedback: "why it's wrong"}
+          #   VARY the correct slot question to question — the validator HARD-fails a course
+          #   where >50% of correct answers share one position (the all-'A' failure)
           explanation:   #   shown after answering — the paragraph that teaches the point
   coding_challenges:     # OPTIONAL: runnable exercises. Only for rust|typescript (the Academy runner compiles ONLY these). Bitcoin/CLI/Python/Solidity lessons take quizzes, not code blocks.
     - id:                #   kebab; becomes the exercise dir name on export
@@ -231,6 +234,11 @@ publishable Academy course; `tools/validate_course.py` validates the specs (`che
   A quiz checks understanding and gives immediate per-option feedback. `multiSelect:false` ⇒ exactly one
   `correct`; put `feedback` on every wrong option and a teaching `explanation` on every question. Quizzes
   are language-agnostic — a Bitcoin, EVM, or CLI lesson still earns one.
+  **Quality bar** (references/academy-schema.md §Quiz): scenario-driven, often two-part prompts tied to
+  what the learner just did; 3 options; distractors are REAL plausible misconceptions written in the same
+  length and register as the answer (never joke options, never a giveaway-long correct label); and the
+  correct answer's position varies roughly evenly across the course — `validate_course.py` HARD-fails
+  >50% one-slot skew and flags a correct-is-always-longest pattern.
 - **Coding challenges are runnable and RUST/TYPESCRIPT ONLY** (the Academy sandbox compiles only these).
   Author them where the lesson's real code is client-side Solana TS or a Rust/Anchor program. The **starter
   must fail** its tests and the **solution must pass** — that contract is the grade, so keep the solution
