@@ -208,12 +208,16 @@ def plan_academy(course_dir: Path, cfg: dict, m: dict) -> tuple[dict[str, str], 
         else:
             warnings.append(f"no draft for {lid} ({stem}.md) — emitting placeholder prose")
             files[f"{ldir}/intro.md"] = f"# {brief.get('title', lid)}\n\n_(draft pending)_\n"
-        # rendered images ship beside the lesson; HTML sources stay re-renderable under
-        # course-level visual-src/ (linter-ignored upstream, never published)
-        for _, name in sorted(pngs.items()):
-            copies.append((str((asset_dir / name).resolve()), f"{ldir}/assets/{name}"))
-        for html in sorted(asset_dir.glob("v*.html")) if asset_dir.is_dir() else []:
-            copies.append((str(html.resolve()), f"visual-src/{slug}/{html.name}"))
+        # every raster in the lesson's asset dir ships beside the lesson: rendered vNN
+        # visuals plus any hand-placed image a draft references as ![alt](assets/<name>).
+        # HTML sources stay re-renderable under course-level visual-src/ (linter-ignored
+        # upstream, never published). PDFs are render intermediates and never ship.
+        if asset_dir.is_dir():
+            for img in sorted(asset_dir.iterdir()):
+                if img.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp", ".gif"):
+                    copies.append((str(img.resolve()), f"{ldir}/assets/{img.name}"))
+            for html in sorted(asset_dir.glob("v*.html")):
+                copies.append((str(html.resolve()), f"visual-src/{slug}/{html.name}"))
 
         blocks: list[dict] = [{"key": "intro", "type": "prose", "src": "intro.md"}]
 
@@ -371,6 +375,8 @@ def selftest() -> int:
         adir.mkdir(parents=True)
         (adir / "v01-diagram.png").write_bytes(b"\x89PNG fake")
         (adir / "v01-diagram.html").write_text("<html>viz</html>", "utf-8")
+        (adir / "fonte-externa.png").write_bytes(b"\x89PNG photo")
+        (adir / "v01-diagram.pdf").write_bytes(b"%PDF intermediate")
         (cdir / "lessons" / "assets" / "_brand.css").write_text(":root{}", "utf-8")
         (cdir / "lessons" / "assets" / "_render.css").write_text(".viz{}", "utf-8")
         (cdir / "ch").mkdir()
@@ -399,6 +405,9 @@ def selftest() -> int:
         chk("> **Visual — unrendered.**" in intro, "unrendered visual falls back to blockquote")
         chk((out / "lessons" / "the-basics" / "assets" / "v01-diagram.png").is_file(),
             "rendered PNG copied beside the lesson")
+        chk((out / "lessons" / "the-basics" / "assets" / "fonte-externa.png").is_file()
+            and not (out / "lessons" / "the-basics" / "assets" / "v01-diagram.pdf").exists(),
+            "hand-placed image copied; PDF intermediate not shipped")
         chk((out / "visual-src" / "the-basics" / "v01-diagram.html").is_file()
             and (out / "visual-src" / "_brand.css").is_file()
             and (out / "visual-src" / "_render.css").is_file(),

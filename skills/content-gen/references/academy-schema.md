@@ -183,8 +183,11 @@ linter-ignored and never published, kept so visuals stay re-renderable from the 
 - **prose** ← the written `lessons/drafts/<lesson>.md`. The Nth ```visual spec becomes
   `![alt](assets/vNN-<type>.png)` when its render exists in `lessons/assets/<stem>/` (run
   `render_visuals.py` BEFORE exporting); an unrendered spec degrades to a blockquote + warning.
-- **assets** ← rendered `lessons/assets/<stem>/vNN-*.png` are copied to `lessons/<slug>/assets/`;
-  the HTML sources + shared `_brand.css`/`_render.css` are copied to `visual-src/`.
+- **assets** ← every raster image in `lessons/assets/<stem>/` is copied to
+  `lessons/<slug>/assets/` — the rendered `vNN-*.png` visuals plus any hand-placed image
+  (a photo, a source slide) that the draft references directly as `![alt](assets/<name>.png)`.
+  PDFs (render intermediates) never ship. HTML sources + shared `_brand.css`/`_render.css`
+  are copied to `visual-src/`.
 - **quiz** ← the lesson brief's `quiz_blocks` (see `lesson-brief-schema.md` §C).
 - **code** ← the lesson brief's `coding_challenges`; each challenge's `starter`/`solution`/`tests` files are
   copied into `<challenge-id>/` under the lesson dir. `language ∈ {rust, typescript}` only — Bitcoin/CLI/
