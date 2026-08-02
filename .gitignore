@@ -85,6 +85,10 @@ test-ledger/
 .surfpool/
 *.so
 
+# ── memsearch plugin (LOCAL memory + index — never commit, avoid leaks) ──
+.memsearch/
+.memsearch-backup/
+
 # ── editors ──────────────────────────────────────────────────────
 .vscode/
 .idea/
