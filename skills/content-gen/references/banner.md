@@ -24,16 +24,30 @@ the file or re-add the marker to reset. It also drops `_brand.css`, `_render.css
 
 ## Two modes
 
-- **Photo mode** (a `branding/banner-bg.{png,jpg,jpeg,webp}` exists): the approved house
-  style is a **blurred, darkened backdrop with a sharp centered cream title card**.
-  `render-banner` pre-bakes `banner-bg-blur.png` with Pillow (cover-crop to 1600×900,
-  Gaussian blur r≈14, brightness ≈0.72) because **WeasyPrint has no `filter`/
-  `backdrop-filter`** — never write CSS blur; it will be silently dropped. The photo is
-  placed as an `<img class="bg">` **element**, not `background-image: url()` (which stays
-  forbidden CSS).
+- **Photo mode** (a `branding/banner-bg.{png,jpg,jpeg,webp}` exists): the photo is placed
+  as an `<img class="bg">` **element**, not `background-image: url()` (which stays
+  forbidden CSS). Because **WeasyPrint has no `filter`/`backdrop-filter`**, any blur or
+  darkening is pre-baked by `render-banner` (Pillow: cover-crop to 1600×900, then blur +
+  brightness). The banner HTML declares its own backdrop treatment with a directive:
+
+      <!-- banner-bg: blur=0 brightness=1.0 file=banner-bg-sharp.png -->
+
+  `blur`/`brightness` feed the bake; `file` is the baked filename the HTML's
+  `<img class="bg">` must reference. No directive = the heavy title-card treatment
+  (blur 14, brightness 0.72, `banner-bg-blur.png`). "Liquid glass" panels are faked:
+  translucent fill + hairline light border + a gradient sheen (`background-color` rgba +
+  `background-image: linear-gradient(...)`), which reads as glass over the photo.
 - **Pure-brand mode** (no photo): cream page + the per-course `.stbr-decor` blob layer +
   a white card — the standard visual house style, so any course gets a banner even
   without art.
+
+**House composition (chosen 2026-08): "scrim"** — the art ships sharp (`blur=0
+brightness=1.0`), a top+bottom gradient scrim makes room, type sits straight on the
+image, pills are glass chips. Explore alternatives beside the main file
+(`branding/banner-<variant>.html`) and render each with
+`render-banner <course> --html branding/banner-<variant>.html` (outputs
+`<stem>.png/.webp` beside it, never picked up by the export); promote the winner by
+copying it over `banner.html`.
 
 ## Card anatomy (what you author)
 

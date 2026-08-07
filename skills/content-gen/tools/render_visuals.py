@@ -585,22 +585,47 @@ def cmd_scaffold_banner(course_dir: Path) -> int:
     return 0
 
 
-def _prepare_banner_bg(p: dict) -> tuple[bool, str]:
-    """Bake branding/banner-bg.* into the blurred+darkened 1600x900 backdrop the banner
-    references (banner-bg-blur.png). WeasyPrint has no CSS blur, so it must be pre-baked."""
+# Per-banner backdrop treatment, declared IN the banner HTML so each variant carries its
+# own bake: <!-- banner-bg: blur=5 brightness=0.92 file=banner-bg-soft.png -->
+# Defaults (no directive): the heavy title-card treatment.
+_BANNER_BG_DIRECTIVE_RE = re.compile(r"<!--\s*banner-bg:([^>]*?)-->")
+_BANNER_BG_DEFAULTS = {"blur": 14.0, "brightness": 0.72, "file": "banner-bg-blur.png"}
+
+
+def _banner_bg_params(html: str) -> dict:
+    out = dict(_BANNER_BG_DEFAULTS)
+    m = _BANNER_BG_DIRECTIVE_RE.search(html)
+    if m:
+        for kv in m.group(1).split():
+            k, _, v = kv.partition("=")
+            if k in ("blur", "brightness"):
+                try:
+                    out[k] = float(v)
+                except ValueError:
+                    pass
+            elif k == "file":
+                out[k] = v
+    return out
+
+
+def _prepare_banner_bg(p: dict, params: dict) -> tuple[bool, str]:
+    """Bake branding/banner-bg.* into the treated 1600x900 backdrop the banner references.
+    WeasyPrint has no CSS blur, so blur/darken is pre-baked (Pillow)."""
     try:
         from PIL import Image, ImageEnhance, ImageFilter
     except ModuleNotFoundError:
-        return False, "Pillow not installed (`pip install Pillow`) — cannot bake banner-bg-blur.png"
+        return False, "Pillow not installed (`pip install Pillow`) — cannot bake the backdrop"
     im = Image.open(p["bg"]).convert("RGB")
     tw, th = CANVAS
     scale = max(tw / im.width, th / im.height)           # cover-crop to the canvas aspect
     im = im.resize((round(im.width * scale), round(im.height * scale)), Image.LANCZOS)
     left, top = (im.width - tw) // 2, (im.height - th) // 2
     im = im.crop((left, top, left + tw, top + th))
-    im = im.filter(ImageFilter.GaussianBlur(radius=14))
-    im = ImageEnhance.Brightness(im).enhance(0.72)
-    im.save(p["blur"], "PNG")
+    if params["blur"] > 0:
+        im = im.filter(ImageFilter.GaussianBlur(radius=params["blur"]))
+    if params["brightness"] != 1.0:
+        im = ImageEnhance.Brightness(im).enhance(params["brightness"])
+    im.save(p["dir"] / params["file"], "PNG")
     return True, "ok"
 
 
@@ -635,30 +660,36 @@ def _compress_banner(png: Path, out: Path, cap: int = _BANNER_CAP) -> tuple[Path
     return None, "no compressor available (install Pillow or cwebp)"
 
 
-def cmd_render_banner(course_dir: Path, dpi: int) -> int:
+def cmd_render_banner(course_dir: Path, dpi: int, html_file: str | None = None) -> int:
     p = _banner_paths(course_dir)
+    if html_file:                                        # a variant beside banner.html
+        p["html"] = Path(html_file)
+        p["pdf"] = p["html"].with_suffix(".pdf")
+        p["png"] = p["html"].with_suffix(".png")
+        p["webp"] = p["html"].with_suffix(".webp")
     if not p["html"].is_file():
-        print("render-banner: no branding/banner.html — run scaffold-banner first", file=sys.stderr)
+        print(f"render-banner: no {p['html']} — run scaffold-banner first", file=sys.stderr)
         return 2
     html = p["html"].read_text("utf-8")
     if "TODO(render)" in html:
-        print("render-banner: banner.html is still the unauthored starter (TODO marker present)",
+        print(f"render-banner: {p['html'].name} is still the unauthored starter (TODO marker present)",
               file=sys.stderr)
         return 2
     bad = [b for b in _FORBIDDEN_CSS if b in html]
     if bad:
-        print(f"render-banner: FAIL forbidden CSS in banner.html: {', '.join(bad)}")
+        print(f"render-banner: FAIL forbidden CSS in {p['html'].name}: {', '.join(bad)}")
         return 1
     if not shutil.which("weasyprint"):
         print("render-banner: SKIP - weasyprint not installed "
               "(`pip install weasyprint`; needs pango/cairo).", file=sys.stderr)
         return 0
-    if "banner-bg-blur.png" in html:
+    params = _banner_bg_params(html)
+    if params["file"] in html:
         if p["bg"] is None:
-            print("render-banner: FAIL banner.html references banner-bg-blur.png but no "
+            print(f"render-banner: FAIL {p['html'].name} references {params['file']} but no "
                   "branding/banner-bg.{png,jpg,jpeg,webp} exists")
             return 1
-        ok_bg, msg = _prepare_banner_bg(p)
+        ok_bg, msg = _prepare_banner_bg(p, params)
         if not ok_bg:
             print(f"render-banner: SKIP - {msg}", file=sys.stderr)
             return 0
@@ -786,6 +817,8 @@ def main(argv=None) -> int:
                              "scaffold-banner", "render-banner"])
     ap.add_argument("course", nargs="?")
     ap.add_argument("--file", help="extract from a single markdown file")
+    ap.add_argument("--html", help="render-banner: render this variant HTML instead of "
+                                   "branding/banner.html (outputs <stem>.png/.webp beside it)")
     ap.add_argument("--dpi", type=int, default=144, help="raster DPI (default 144 = 1.5x)")
     ap.add_argument("--only", help="render only asset_ids containing this substring")
     ap.add_argument("--selftest", action="store_true")
@@ -810,7 +843,7 @@ def main(argv=None) -> int:
     if a.cmd == "scaffold-banner":
         return cmd_scaffold_banner(course)
     if a.cmd == "render-banner":
-        return cmd_render_banner(course, a.dpi)
+        return cmd_render_banner(course, a.dpi, a.html)
     ap.print_help()
     return 2
 
