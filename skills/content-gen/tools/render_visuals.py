@@ -15,11 +15,20 @@ does the creative HTML authoring in between.
     #   ... agent fills each <asset>.html's .viz with on-brand markup ...
     render_visuals.py render   <course> [--dpi N]  # weasyprint -> PDF -> PNG (SKIP if absent)
     render_visuals.py check    <course>            # rendered vs unrendered report
+    render_visuals.py scaffold-banner <course>     # course banner starter -> branding/banner.html
+    render_visuals.py render-banner   <course>     # banner -> branding/banner.{png,webp} (<=1MiB)
     render_visuals.py --selftest
 
 Assets land beside the lessons in `lessons/assets/<lesson-stem>/v<NN>-<type>.{html,pdf,png}`
 (gitignored with the course). A FAIL is a real render error; SKIP = WeasyPrint/rasterizer
 absent (install: `pip install weasyprint` + a rasterizer, or `pip install pymupdf`).
+
+The COURSE BANNER is the one course-level visual: the Academy card thumbnail
+(references/banner.md). It lives in `content/courses/<id>/branding/` — drop a
+`banner-bg.png` photo there for photo mode (blurred backdrop + cream title card;
+the blur is pre-baked via Pillow because WeasyPrint has no CSS blur), or scaffold
+without one for the pure-brand mode. academy_export.py ships `banner.webp` as the
+course `thumbnail:`.
 """
 from __future__ import annotations
 import argparse
@@ -457,6 +466,227 @@ def cmd_check(course_dir: Path) -> int:
     return 0
 
 
+# ---- course banner (the one course-level visual: the Academy thumbnail) -------
+# Upstream contract (solanabr/academy-courses → superteam-academy compile):
+# `thumbnail:` is a course-relative path under a course-level assets/ dir, formats
+# png/jpg/jpeg/webp/svg, HARD 1 MiB per-file cap, card displays it at 400x225 (16:9).
+
+_BANNER_BG_EXTS = (".png", ".jpg", ".jpeg", ".webp")
+_BANNER_CAP = 1 << 20                                # 1 MiB upstream per-asset cap
+
+
+def _banner_paths(course_dir: Path) -> dict:
+    b = course_dir / "branding"
+    bg = next((b / f"banner-bg{e}" for e in _BANNER_BG_EXTS
+               if (b / f"banner-bg{e}").is_file()), None)
+    return {"dir": b, "html": b / "banner.html", "pdf": b / "banner.pdf",
+            "png": b / "banner.png", "webp": b / "banner.webp",
+            "blur": b / "banner-bg-blur.png", "bg": bg,
+            "asset_id": f"{course_dir.name}/banner"}
+
+
+# The XP bolt as inline SVG — the ⚡ emoji is unreliable under WeasyPrint/Pango.
+_BOLT_SVG = ('<svg width="18" height="26" viewBox="0 0 16 24">'
+             '<polygon points="9,0 0,14 6,14 5,24 16,9 9,9" fill="#1b231d"/></svg>')
+
+_BANNER_STARTER = """<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_brand.css">
+<link rel="stylesheet" href="_render.css">
+<style>
+  @page {{ size: {w}px {h}px; margin: 0; }}
+  html, body {{ margin: 0; }}
+  body {{ width: {w}px; height: {h}px; position: relative; overflow: hidden;
+         background: {page_bg}; padding: 0; }}
+  .bg {{ position: absolute; top: 0; left: 0; width: {w}px; height: {h}px;
+        object-fit: cover; }}
+  .vignette {{ position: absolute; top: 0; left: 0; width: {w}px; height: {h}px;
+              background: linear-gradient(180deg, rgba(27,35,29,0.32) 0%,
+                          rgba(27,35,29,0.10) 42%, rgba(27,35,29,0.40) 100%); }}
+  .stbr-decor {{ top: 0; right: 0; bottom: 0; left: 0; }}  /* banner body has no padding */
+  .stage {{ position: absolute; top: 0; left: 0; width: {w}px; height: {h}px; z-index: 1;
+           display: flex; align-items: center; justify-content: center; }}
+  .card {{ background: {card_bg}; border-radius: var(--radius-2xl);
+          padding: 56px 72px 60px; width: 1240px; }}
+  .card-top {{ display: flex; justify-content: space-between; align-items: center;
+              margin-bottom: 30px; }}
+  .card-top .stbr-eyebrow {{ font-size: 24px; }}
+  .card-title {{ font-family: var(--font-display); font-weight: var(--weight-black);
+                color: var(--text-primary); font-size: 82px; line-height: 1.05;
+                letter-spacing: var(--tracking-tight); margin: 0 0 44px;
+                text-wrap: balance; }}
+  .meta {{ display: flex; gap: 16px; align-items: center; }}
+  /* inline-BLOCK, not inline-flex: WeasyPrint double-draws borders on inline-flex */
+  .pill {{ display: inline-block; padding: 13px 28px;
+          border-radius: var(--radius-pill); font-family: var(--font-display);
+          font-weight: var(--weight-bold); font-size: 23px; letter-spacing: 0.08em;
+          text-transform: uppercase; white-space: nowrap; }}
+  .pill svg {{ vertical-align: -4px; margin-right: 8px; }}
+  .pill--level {{ background: var(--stbr-emerald); color: var(--text-on-brand); }}
+  .pill--stat  {{ border: var(--border-bold) solid var(--stbr-dark);
+                 color: var(--text-primary); }}
+  .pill--xp    {{ background: var(--stbr-yellow); color: var(--text-on-accent);
+                 margin-left: auto; }}
+</style></head>
+<body>
+<!-- COURSE BANNER: the Academy course thumbnail (card shows it at 400x225 — keep
+     text short and large; judge legibility at 25% zoom). AUTHOR the .card content:
+     eyebrow, title (break lines with <br> if needed), pill texts. Rules and both
+     modes: skills/content-gen/references/banner.md.
+     WeasyPrint-safe CSS only: NO filter/backdrop-filter (photo blur is pre-baked
+     into banner-bg-blur.png by `render-banner`), no box shadows, no CSS
+     background images via url, NO emoji (the XP bolt is inline SVG). -->
+{bg_layer}<div class="stage">
+  <div class="card">
+    <div class="card-top">
+      <div class="stbr-eyebrow">// COURSE TAG</div>
+      <img src="logo.svg" style="height: 46px;" alt="">
+    </div>
+    <h1 class="card-title">COURSE TITLE</h1>
+    <div class="meta">
+      <span class="pill pill--level">BEGINNER</span>
+      <span class="pill pill--stat">NN LESSONS &middot; NN HOURS</span>
+      <span class="pill pill--xp">{bolt}NNN XP</span>
+    </div>
+  </div>
+</div>
+<!-- TODO(render): author this banner, then delete this marker -->
+</body></html>
+"""
+
+
+def cmd_scaffold_banner(course_dir: Path) -> int:
+    p = _banner_paths(course_dir)
+    p["dir"].mkdir(parents=True, exist_ok=True)
+    if BRAND_CSS.is_file():
+        (p["dir"] / "_brand.css").write_text(BRAND_CSS.read_text("utf-8"))
+    if RENDER_CSS.is_file():
+        (p["dir"] / "_render.css").write_text(RENDER_CSS.read_text("utf-8"))
+    # emerald mark: legible on the cream/white card (the cream logo would vanish)
+    logo = SKILL / "brand" / "assets" / "logos" / "horizontal-emerald.svg"
+    if logo.is_file() and not (p["dir"] / "logo.svg").exists():
+        (p["dir"] / "logo.svg").write_text(logo.read_text("utf-8"))
+    if p["html"].exists() and "TODO(render)" not in p["html"].read_text("utf-8"):
+        print(f"scaffold-banner: kept authored {p['html']} (re-author or delete to reset)")
+        return 0
+    photo = p["bg"] is not None
+    if photo:
+        bg_layer = ('<img class="bg" src="banner-bg-blur.png" alt="">\n'
+                    '<div class="vignette"></div>\n')
+        page_bg, card_bg = "var(--stbr-dark)", "var(--stbr-cream)"
+    else:
+        bg_layer = _decor(p["asset_id"], 3)
+        page_bg, card_bg = "var(--surface-page)", "var(--surface-card)"
+    p["html"].write_text(_BANNER_STARTER.format(
+        w=CANVAS[0], h=CANVAS[1], bg_layer=bg_layer,
+        page_bg=page_bg, card_bg=card_bg, bolt=_BOLT_SVG))
+    print(f"scaffold-banner: {'photo' if photo else 'pure-brand'} starter -> {p['html']}"
+          + ("" if photo else "  (drop branding/banner-bg.png + re-run for photo mode)"))
+    return 0
+
+
+def _prepare_banner_bg(p: dict) -> tuple[bool, str]:
+    """Bake branding/banner-bg.* into the blurred+darkened 1600x900 backdrop the banner
+    references (banner-bg-blur.png). WeasyPrint has no CSS blur, so it must be pre-baked."""
+    try:
+        from PIL import Image, ImageEnhance, ImageFilter
+    except ModuleNotFoundError:
+        return False, "Pillow not installed (`pip install Pillow`) — cannot bake banner-bg-blur.png"
+    im = Image.open(p["bg"]).convert("RGB")
+    tw, th = CANVAS
+    scale = max(tw / im.width, th / im.height)           # cover-crop to the canvas aspect
+    im = im.resize((round(im.width * scale), round(im.height * scale)), Image.LANCZOS)
+    left, top = (im.width - tw) // 2, (im.height - th) // 2
+    im = im.crop((left, top, left + tw, top + th))
+    im = im.filter(ImageFilter.GaussianBlur(radius=14))
+    im = ImageEnhance.Brightness(im).enhance(0.72)
+    im.save(p["blur"], "PNG")
+    return True, "ok"
+
+
+def _compress_banner(png: Path, out: Path, cap: int = _BANNER_CAP) -> tuple[Path | None, str]:
+    """Shrink the full-res render to a shippable <=1MiB 1600x900 image (webp, jpg last
+    resort). Pillow first, then cwebp, then sips (macOS)."""
+    try:
+        from PIL import Image
+        im = Image.open(png).convert("RGB")
+        if im.size != CANVAS:
+            im = im.resize(CANVAS, Image.LANCZOS)
+        for q in (82, 72, 62, 50):
+            im.save(out, "WEBP", quality=q, method=6)
+            if out.stat().st_size <= cap:
+                return out, f"pillow webp q{q}"
+        return None, f"still {out.stat().st_size} bytes over the {cap} cap at q50"
+    except ModuleNotFoundError:
+        pass
+    if shutil.which("cwebp"):
+        for q in (82, 72, 62, 50):
+            r = subprocess.run(["cwebp", "-q", str(q), "-resize", str(CANVAS[0]), str(CANVAS[1]),
+                                str(png), "-o", str(out)], capture_output=True, text=True)
+            if r.returncode == 0 and out.exists() and out.stat().st_size <= cap:
+                return out, f"cwebp q{q}"
+    if shutil.which("sips"):
+        jpg = out.with_suffix(".jpg")
+        r = subprocess.run(["sips", "-s", "format", "jpeg", "-s", "formatOptions", "70",
+                            "-z", str(CANVAS[1]), str(CANVAS[0]), str(png), "--out", str(jpg)],
+                           capture_output=True, text=True)
+        if r.returncode == 0 and jpg.exists() and jpg.stat().st_size <= cap:
+            return jpg, "sips jpeg"
+    return None, "no compressor available (install Pillow or cwebp)"
+
+
+def cmd_render_banner(course_dir: Path, dpi: int) -> int:
+    p = _banner_paths(course_dir)
+    if not p["html"].is_file():
+        print("render-banner: no branding/banner.html — run scaffold-banner first", file=sys.stderr)
+        return 2
+    html = p["html"].read_text("utf-8")
+    if "TODO(render)" in html:
+        print("render-banner: banner.html is still the unauthored starter (TODO marker present)",
+              file=sys.stderr)
+        return 2
+    bad = [b for b in _FORBIDDEN_CSS if b in html]
+    if bad:
+        print(f"render-banner: FAIL forbidden CSS in banner.html: {', '.join(bad)}")
+        return 1
+    if not shutil.which("weasyprint"):
+        print("render-banner: SKIP - weasyprint not installed "
+              "(`pip install weasyprint`; needs pango/cairo).", file=sys.stderr)
+        return 0
+    if "banner-bg-blur.png" in html:
+        if p["bg"] is None:
+            print("render-banner: FAIL banner.html references banner-bg-blur.png but no "
+                  "branding/banner-bg.{png,jpg,jpeg,webp} exists")
+            return 1
+        ok_bg, msg = _prepare_banner_bg(p)
+        if not ok_bg:
+            print(f"render-banner: SKIP - {msg}", file=sys.stderr)
+            return 0
+    ok_pdf, err = _render_pdf(p)
+    if not ok_pdf:
+        print(f"render-banner: FAIL weasyprint: {(err.splitlines()[-1][:100] if err else 'error')}")
+        return 1
+    pages = _pdf_pages(p["pdf"])
+    if pages > 1:
+        p["pdf"].unlink(missing_ok=True)
+        print(f"render-banner: FAIL overflow — spans {pages} pages "
+              f"(must fit one {CANVAS[0]}x{CANVAS[1]} page)")
+        return 1
+    rok, how = _rasterize(p["pdf"], p["png"], dpi)
+    p["pdf"].unlink(missing_ok=True)
+    if not rok:
+        print(f"render-banner: FAIL rasterize ({how})")
+        return 1
+    out, meth = _compress_banner(p["png"], p["webp"])
+    if out is None:
+        print(f"render-banner: {p['png'].name} rendered, but compression FAILED: {meth}")
+        return 1
+    size = out.stat().st_size
+    print(f"render-banner: {p['png']} (full-res review) + {out.name} "
+          f"{size // 1024}KB via {meth} [1MiB cap: {'PASS' if size <= _BANNER_CAP else 'FAIL'}]")
+    return 0
+
+
 def selftest() -> int:
     ok = True
     def chk(c, m):
@@ -513,6 +743,38 @@ def selftest() -> int:
     chk("align-items: flex-start" in _safe_area_html('body { align-items: center; }')
         and "align-items: center" not in _safe_area_html('body { align-items: center; }'),
         "safe-area check top-aligns the card (center → flex-start; exposes within-page clipping)")
+    # ---- course banner ----
+    cmd_scaffold_banner(d)
+    bp = _banner_paths(d)
+    brand_starter = bp["html"].read_text("utf-8")
+    chk("stbr-decor" in brand_starter and 'class="bg"' not in brand_starter
+        and "TODO(render)" in brand_starter,
+        "scaffold-banner without a photo writes the pure-brand starter")
+    chk((bp["dir"] / "_brand.css").is_file() and (bp["dir"] / "logo.svg").is_file(),
+        "scaffold-banner ships brand css + logo beside the banner")
+    (bp["dir"] / "banner-bg.png").write_bytes(b"\x89PNG fake photo")
+    cmd_scaffold_banner(d)                           # TODO still present -> re-scaffolded
+    photo_starter = bp["html"].read_text("utf-8")
+    chk('class="bg"' in photo_starter and "banner-bg-blur.png" in photo_starter
+        and "vignette" in photo_starter, "with a photo, re-scaffold switches to photo mode")
+    chk("_brand.css" in photo_starter and f"{CANVAS[0]}px {CANVAS[1]}px" in photo_starter
+        and "polygon" in photo_starter,
+        "banner starter is brand-linked, canvas-sized, XP bolt is inline SVG (no emoji)")
+    authored = photo_starter.replace(
+        "<!-- TODO(render): author this banner, then delete this marker -->", "")
+    bp["html"].write_text(authored)
+    cmd_scaffold_banner(d)
+    chk(bp["html"].read_text("utf-8") == authored, "scaffold-banner keeps an authored banner.html")
+    try:
+        from PIL import Image
+        big = d / "big.png"
+        Image.new("RGB", (2400, 1350), (0, 139, 76)).save(big)
+        out, meth = _compress_banner(big, d / "banner.webp")
+        chk(out is not None and out.stat().st_size <= _BANNER_CAP
+            and Image.open(out).size == CANVAS,
+            f"_compress_banner -> {CANVAS[0]}x{CANVAS[1]} webp under the 1MiB cap ({meth})")
+    except ModuleNotFoundError:
+        print("SKIP - _compress_banner (Pillow not installed)")
     print("RENDER_VISUALS SELFTESTS " + ("PASSED" if ok else "FAILED"))
     return 0 if ok else 1
 
@@ -520,7 +782,8 @@ def selftest() -> int:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="render ```visual specs into on-brand images")
     ap.add_argument("cmd", nargs="?",
-                    choices=["extract", "scaffold", "decorate", "render", "review", "check"])
+                    choices=["extract", "scaffold", "decorate", "render", "review", "check",
+                             "scaffold-banner", "render-banner"])
     ap.add_argument("course", nargs="?")
     ap.add_argument("--file", help="extract from a single markdown file")
     ap.add_argument("--dpi", type=int, default=144, help="raster DPI (default 144 = 1.5x)")
@@ -544,6 +807,10 @@ def main(argv=None) -> int:
         return cmd_review(course)
     if a.cmd == "check":
         return cmd_check(course)
+    if a.cmd == "scaffold-banner":
+        return cmd_scaffold_banner(course)
+    if a.cmd == "render-banner":
+        return cmd_render_banner(course, a.dpi)
     ap.print_help()
     return 2
 

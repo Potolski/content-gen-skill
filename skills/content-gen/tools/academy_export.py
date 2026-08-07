@@ -13,6 +13,8 @@ block-based shape (references/academy-schema.md). This tool is the one-way proje
       (brief.coding_challenges)             lessons/<slug>/<challenge>/{starter,solution}.{rs,ts},tests.json
       lessons/assets/<stem>/vNN-*.png       lessons/<slug>/assets/vNN-*.png
       lessons/assets/<stem>/vNN-*.html      visual-src/<slug>/vNN-*.html  (+ shared _brand/_render.css)
+      branding/banner.webp                  assets/banner.webp + `thumbnail:` in course.yaml
+      branding/banner.html (+logo, bg)      visual-src/  (re-renderable banner source)
 
 It is ADDITIVE: it reads the course dir read-only and writes only into --out. The
 source course is never mutated. Publish-only metadata (creator wallet, difficulty,
@@ -30,6 +32,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import shutil
 import sys
@@ -114,6 +117,13 @@ def _academy_cfg(m: dict, opts: dict) -> dict:
     cid = ac.get("course_id") or f"course-{slug}"
     cid = cid[:32].rstrip("-")
     lessons = flatten_lessons(m)
+    # Academy `duration` is HOURS, display only (the course card renders "{duration} hours").
+    # Derive from the authoring estimate; a lesson count here is the legacy bug this fixes.
+    hours = (course.get("length_target", {}) or {}).get("hours")
+    if isinstance(hours, (int, float)) and not isinstance(hours, bool) and hours > 0:
+        default_duration = math.ceil(hours) if hours >= 1 else round(hours, 2)
+    else:
+        default_duration = len(lessons)              # last resort when no estimate exists
     return {
         "slug": slug,
         "course_id": cid,
@@ -121,7 +131,7 @@ def _academy_cfg(m: dict, opts: dict) -> dict:
         "title": ac.get("title") or course.get("title", internal_id),
         "description": ac.get("description") or course.get("one_line_promise", ""),
         "difficulty": ac.get("difficulty", "beginner"),
-        "duration": ac.get("duration", len(lessons)),
+        "duration": ac.get("duration", default_duration),
         "xpPerLesson": ac.get("xpPerLesson", 20),
         "xpReward": ac.get("xpReward", min(5000, 20 * max(1, len(lessons)))),
         "creator": ac.get("creator", "REPLACE_WITH_YOUR_SOLANA_WALLET"),
@@ -176,6 +186,25 @@ def plan_academy(course_dir: Path, cfg: dict, m: dict) -> tuple[dict[str, str], 
         "creator": cfg["creator"],
     })
     course_doc.update(cfg["extra_course_keys"])
+    # course banner → platform `thumbnail:` (course-level assets/ is a recognized upstream
+    # asset source, 1 MiB per-file cap). Only the compressed render ships — never
+    # branding/banner.png, the full-res review intermediate.
+    bdir = course_dir / "branding"
+    banner = next((bdir / f"banner{e}" for e in (".webp", ".jpg", ".jpeg")
+                   if (bdir / f"banner{e}").is_file()), None)
+    if banner:
+        if banner.stat().st_size > (1 << 20):
+            warnings.append(f"branding/{banner.name}: {banner.stat().st_size} bytes exceeds "
+                            f"the 1 MiB upstream asset cap — re-run render_visuals.py render-banner")
+        copies.append((str(banner.resolve()), f"assets/{banner.name}"))
+        course_doc.setdefault("thumbnail", f"assets/{banner.name}")  # academy block wins
+        for extra in ("banner.html", "logo.svg"):
+            f = bdir / extra
+            if f.is_file():
+                copies.append((str(f.resolve()), f"visual-src/{extra}"))
+        bg = next(iter(sorted(bdir.glob("banner-bg.*"))), None)      # original, not the -blur bake
+        if bg:
+            copies.append((str(bg.resolve()), f"visual-src/{bg.name}"))
     course_doc["modules"] = [
         {"key": _safe(mod["id"].replace("module-", "")),
          "title": mod.get("title", mod["id"]),
@@ -266,9 +295,12 @@ def plan_academy(course_dir: Path, cfg: dict, m: dict) -> tuple[dict[str, str], 
         files[f"{ldir}/lesson.yaml"] = to_yaml(lesson_doc)
 
     # shared stylesheets the visual-src HTML links as ../_brand.css / ../_render.css
+    # (the banner links them same-dir; branding/ is the fallback for banner-only courses)
     if any(rel.startswith("visual-src/") for _, rel in copies):
         for css in ("_brand.css", "_render.css"):
             f = course_dir / "lessons" / "assets" / css
+            if not f.is_file():
+                f = course_dir / "branding" / css
             if f.is_file():
                 copies.append((str(f.resolve()), f"visual-src/{css}"))
             else:
@@ -347,9 +379,27 @@ def selftest() -> int:
     chk("> **Visual — the flow.**" in proj and "a full sentence" in proj and len(warns) == 1,
         "unrendered visual -> blockquote fallback + warning")
 
+    # duration default: derived from length_target.hours (HOURS upstream, never lesson count)
+    one_lesson = [{"id": "l1", "module": "m", "order": 1, "brief": {}}]
+    chk(_academy_cfg({"course": {"length_target": {"hours": 18}},
+                      "lessons": one_lesson}, {})["duration"] == 18,
+        "duration defaults to length_target.hours (18)")
+    chk(_academy_cfg({"course": {"length_target": {"hours": 17.5}},
+                      "lessons": one_lesson}, {})["duration"] == 18,
+        "fractional hours >= 1 round up to whole hours")
+    chk(_academy_cfg({"course": {"length_target": {"hours": 0.2}},
+                      "lessons": one_lesson}, {})["duration"] == 0.2,
+        "sub-hour courses keep the fractional value (card shows '0.2 hours')")
+    chk(_academy_cfg({"course": {}, "lessons": one_lesson}, {})["duration"] == 1,
+        "no estimate at all falls back to the lesson count")
+    chk(_academy_cfg({"course": {"length_target": {"hours": 2}}, "lessons": one_lesson,
+                      "academy": {"duration": 5}}, {})["duration"] == 5,
+        "an explicit academy.duration wins over the derivation")
+
     man = {
         "schema_version": 1,
-        "course": {"id": "demo-course", "title": "Demo", "one_line_promise": "Do X."},
+        "course": {"id": "demo-course", "title": "Demo", "one_line_promise": "Do X.",
+                   "length_target": {"hours": 6}},
         "academy": {"prefix": "dm", "creator": "Wa11etDemo1111111111111111111111111111111",
                     "skills_map": {"account-model": "account-model"}, "default_skills": ["rust"]},
         "modules": [{"id": "module-intro", "title": "Intro", "teaches_skills": ["account-model"]}],
@@ -383,6 +433,14 @@ def selftest() -> int:
         (cdir / "ch" / "starter.rs").write_text("fn add(a:i64,b:i64)->i64{0}\n", "utf-8")
         (cdir / "ch" / "solution.rs").write_text("fn add(a:i64,b:i64)->i64{a+b}\n", "utf-8")
         (cdir / "ch" / "tests.json").write_text('[{"id":"t1","input":"2, 3","expectedOutput":"5"}]', "utf-8")
+        bdir = cdir / "branding"
+        bdir.mkdir()
+        (bdir / "banner.webp").write_bytes(b"RIFF fake webp")
+        (bdir / "banner.png").write_bytes(b"\x89PNG full-res intermediate")
+        (bdir / "banner.html").write_text("<html>banner</html>", "utf-8")
+        (bdir / "logo.svg").write_text("<svg/>", "utf-8")
+        (bdir / "banner-bg.png").write_bytes(b"\x89PNG photo")
+        (bdir / "banner-bg-blur.png").write_bytes(b"\x89PNG blur bake")
         (cdir / "manifest.json").write_text(json.dumps(man), "utf-8")
         out = Path(td) / "academy"
         emit(str(cdir), str(out), opts={}, force=True)
@@ -412,6 +470,16 @@ def selftest() -> int:
             and (out / "visual-src" / "_brand.css").is_file()
             and (out / "visual-src" / "_render.css").is_file(),
             "HTML source + shared css exported under visual-src/")
+        chk("duration: 6" in cy, "course duration derived from length_target.hours")
+        chk("thumbnail: assets/banner.webp" in cy, "banner detected -> thumbnail in course.yaml")
+        chk((out / "assets" / "banner.webp").is_file()
+            and not (out / "assets" / "banner.png").exists(),
+            "compressed banner copied; full-res banner.png never ships")
+        chk((out / "visual-src" / "banner.html").is_file()
+            and (out / "visual-src" / "logo.svg").is_file()
+            and (out / "visual-src" / "banner-bg.png").is_file()
+            and not (out / "visual-src" / "banner-bg-blur.png").exists(),
+            "banner source + logo + original bg (not the blur bake) under visual-src/")
 
     print("\n" + ("ACADEMY_EXPORT SELFTESTS PASSED" if ok else "FAILURES ABOVE"))
     return 0 if ok else 1

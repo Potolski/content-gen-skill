@@ -7,7 +7,7 @@ meets Superteam Brasil, "warm, earthy, optimistic". Flat, editorial, generous wh
 ## Files here
 - `styles.css` — the design system: color/type/spacing/effect tokens + base element styles. Link this one file. Fonts (Archivo + Inter) load via a Google Fonts `@import` at the top.
 - `assets/shapes/morth-01…28.svg` — 28 organic "morph" blobs. Use LARGE as background decoration, bleeding off an edge. Recolor to a brand fill. Never outline, shadow, or shrink to a tiny icon.
-- `assets/logos/{symbol,horizontal}-{emerald,cream,dark}.svg` — the mark. Use `cream` on emerald/dark fields, `emerald`/`dark` on cream. Never stretch, rotate, recolour outside the palette, or add effects. Most course visuals need NO logo; add it only for covers/title cards.
+- `assets/logos/{symbol,horizontal}-{emerald,cream,dark}.svg` — the mark. Use `cream` on emerald/dark fields, `emerald`/`dark` on cream. Never stretch, rotate, recolour outside the palette, or add effects. Most course visuals need NO logo; add it only for covers/title cards — the course banner (`references/banner.md`, `render_visuals.py scaffold-banner`) is exactly that case and defaults to `horizontal-emerald.svg` on the cream card.
 
 ## Palette (use the semantic tokens, not raw hex)
 | role | token | value |
