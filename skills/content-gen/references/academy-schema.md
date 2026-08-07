@@ -37,7 +37,8 @@ title: From Bitcoin to Solana
 description: >-                          # optional
   ...
 difficulty: beginner                    # beginner | intermediate | advanced
-duration: 15                            # number (we use lesson count)
+duration: 18                            # HOURS, display only (card renders "{duration} hours") — NOT lesson count;
+                                        #   sub-hour courses may use a fraction (e.g. 0.25)
 xpPerLesson: 20                         # 1..100
 xpReward: 300                           # 0..5000  (see XP ceiling below)
 creator: <SolanaWalletAddress>          # required in practice; Course.creator on-chain, immutable
@@ -177,6 +178,16 @@ Upstream CI enforces **no orphan files** — every asset must be referenced from
 A course may also keep the HTML sources that generated its images in a course-level `visual-src/`
 folder (`visual-src/<lesson>/vNN-<kind>.html` + shared `_brand.css`/`_render.css`); it is
 linter-ignored and never published, kept so visuals stay re-renderable from the repo.
+
+### Course thumbnail (banner)
+The optional course-level `thumbnail:` is a **course-folder-relative path** (e.g.
+`assets/banner.webp`) resolved by the platform compiler; a course-level `assets/` dir is a
+recognized asset source, rewritten to `/content-assets/<slug>/…`. Constraints: formats
+png/jpg/jpeg/webp/svg, **hard 1 MiB per-file cap**, displayed at 400×225 (16:9) on the course
+card, `/cover.png` fallback when absent. ContentGen renders it with
+`render_visuals.py scaffold-banner` / `render-banner` (see `references/banner.md`); the export
+auto-detects `branding/banner.{webp,jpg,jpeg}`, copies it to `assets/`, and emits `thumbnail:`
+(an explicit `academy.extra_course_keys.thumbnail` wins).
 
 ## How ContentGen maps onto this (the export)
 - `course-<internal-id>` (≤32 chars) / `lesson-<prefix>-<internal-id>`; module `key` = internal module slug.

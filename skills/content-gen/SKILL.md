@@ -104,6 +104,9 @@ whether it MUST ground against live sources.
     skew), then project to the Academy publish tree and prove the challenge contract:
     ```bash
     python3 "$SKILL/tools/validate_course.py" all --course content/courses/<id>   # quiz (incl. answer spread) + challenge checks
+    python3 "$SKILL/tools/render_visuals.py" scaffold-banner content/courses/<id> # course banner → Academy thumbnail
+    #   ... author branding/banner.html (references/banner.md), then:
+    python3 "$SKILL/tools/render_visuals.py" render-banner   content/courses/<id> # → branding/banner.webp (≤1MiB)
     python3 "$SKILL/tools/academy_export.py" emit --course content/courses/<id> --out content/academy/courses/<slug>
     python3 "$SKILL/tools/verify_challenges.py" content/courses/<id>              # starter fails / solution passes
     ```
@@ -127,7 +130,7 @@ whether it MUST ground against live sources.
 | 8–10 cadence/research/assess | `design-spine.md` §§5,6,9 | **yes** |
 | 11 emit | `references/output-contract.md`, `references/quality-bar.md`, `tools/` | — |
 | 12 write | `references/visual-placeholders.md` (+ writer-style if installed) | reuse 9 |
-| 13 plugins/publish (optional) | `references/academy-schema.md`, `lesson-brief-schema.md` §H | — |
+| 13 plugins/publish (optional) | `references/academy-schema.md`, `lesson-brief-schema.md` §H, `references/banner.md` | — |
 
 If grounding tooling is unavailable, follow the degradation ladder in
 `references/research-grounding.md` — never silently mark a claim verified from memory.
@@ -168,11 +171,15 @@ python3 "$SKILL/tools/scaffold_course.py" emit --manifest m.json --out content/c
   overflows the 1600×900 canvas; `review` adds a static QA (page-overflow + forbidden-CSS lint)
   that pairs with the fresh-eyes visual pass in `references/visual-review.md`. Deterministic, no
   browser; SKIP if WeasyPrint/rasterizer absent. Additive — the ` ```visual ` spec stays in the
-  markdown; the PNG is written beside the lesson.
+  markdown; the PNG is written beside the lesson. `scaffold-banner` / `render-banner` produce the
+  one course-level visual — the Academy card thumbnail — in `branding/` (photo-backdrop or
+  pure-brand; `references/banner.md`).
 - `tools/academy_export.py` — the **optional Academy publish projection**: `emit --course
   content/courses/<id> --out content/academy/courses/<slug>` materializes the platform's YAML
   block tree (`course.yaml` + per-lesson `lesson.yaml` with prose/quiz/code blocks + copied
   challenge files) from the manifest, drafts, and brief `quiz_blocks`/`coding_challenges`.
+  Auto-detects `branding/banner.{webp,jpg,jpeg}` → course `thumbnail:`; `duration` is HOURS
+  (derived from `length_target.hours` unless `academy.duration` is set).
   One-way and additive — reads the course read-only, writes only under `--out`
   (`references/academy-schema.md`).
 - `tools/verify_challenges.py` — proves the **Academy runtime contract** for every
