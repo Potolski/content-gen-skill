@@ -119,9 +119,9 @@ lesson:
 The craft names below mirror the writer-style release and may evolve there; the binding
 contract is the `dominant_job` enum, resolved against the **installed** writer-style at
 runtime. The architect classifies each lesson's **dominant job** and writes it into the brief. The voice skill's
-router (the `writer-style` skill's own `routing/ROUTING.md` — locate via that skill's install; never a
-hardcoded relative path) consumes it directly — so the architecture decides
-the routing, and the writer never has to guess.
+router (the `writer-style` skill's own router, `profiles/<profile>/ROUTING.md` as of writer-style
+v1.2.0 — locate via that skill's install, never a hardcoded relative path) consumes it directly —
+so the architecture decides the routing, and the writer never has to guess.
 
 | Lesson's dominant job | `dominant_job` | Voice craft the brief should trigger |
 |---|---|---|

@@ -48,10 +48,42 @@ def course_dirs() -> list[Path]:
     return dirs
 
 
+WRITER_STYLE_SKILL_NAME = "writer-style"       # the skill dir
+WRITER_STYLE_PLUGIN_NAME = "writer-style-skill"  # the repo/plugin that ships it
+
+
+def _plugin_version_key(p: Path) -> tuple[int, ...]:
+    """Sort key for a plugin-cache version dir, so the newest install wins."""
+    return tuple(int(s) if s.isdigit() else -1 for s in p.name.split("."))
+
+
 def writer_style_dir() -> Path | None:
+    """Locate the *installed* writer-style skill, or None if it isn't present.
+
+    writer-style is an optional dep (SKILL.md ships a no-writer degradation path),
+    so absence is a skip, not a failure. Per SKILL.md's contract we discover it by
+    name at runtime — newest release, never a hardcoded absolute path. Order:
+    explicit override, installed plugin, user/project skill, sibling dev checkout.
+    """
     import os
+
     cand = [Path(p) for p in [os.environ.get("WRITER_STYLE_SKILL", "")] if p]
-    cand += [Path.home() / "Developer/GigaClaude/writer-style-skill/skills/writer-style"]
+
+    # installed from a marketplace: ~/.claude/plugins/cache/<mkt>/<plugin>/<version>/
+    cache = Path.home() / ".claude" / "plugins" / "cache"
+    cand += sorted(
+        cache.glob(f"*/{WRITER_STYLE_PLUGIN_NAME}/*/skills/{WRITER_STYLE_SKILL_NAME}"),
+        key=lambda p: _plugin_version_key(p.parent.parent),
+        reverse=True,
+    )
+
+    # installed as a user-level or project-level skill
+    cand += [Path.home() / ".claude" / "skills" / WRITER_STYLE_SKILL_NAME,
+             REPO / ".claude" / "skills" / WRITER_STYLE_SKILL_NAME]
+
+    # dev layout: sibling checkout next to THIS repo (relative, so it isn't one dev's $HOME)
+    cand += [REPO.parent / WRITER_STYLE_PLUGIN_NAME / "skills" / WRITER_STYLE_SKILL_NAME]
+
     for c in cand:
         if (c / "tools" / "validate_voice.py").is_file():
             return c
@@ -84,7 +116,7 @@ def t1_gates() -> bool:
 
     w = writer_style_dir()
     if w is None:
-        print("skip - writer-style not resolvable (set WRITER_STYLE_SKILL); facts/tells skipped")
+        print("skip - writer-style not installed (or set WRITER_STYLE_SKILL); facts/tells skipped")
         return ok
     vv = w / "tools" / "validate_voice.py"
     card = w / "profiles" / "kaue" / "kaue.card.yaml"
@@ -230,6 +262,62 @@ def main(argv=None) -> int:
     if "5" in tiers:
         print("== tier 5: verify =="); ok = t5_verify() and ok
     print("\nCI: " + ("GREEN" if ok else "RED"))
+    return 0 if ok else 1
+
+
+def selftest() -> int:
+    """Guards writer-style discovery: order, fall-through, version sort, graceful skip."""
+    import os
+    import tempfile
+
+    ok = True
+
+    def chk(c, m):
+        nonlocal ok
+        print(("PASS" if c else "FAIL") + " - " + m)
+        ok = ok and c
+
+    # version sort: numeric, so 1.10.0 beats 1.9.0 (a plain string sort gets this wrong)
+    k = _plugin_version_key
+    order = sorted([Path("a/1.9.0"), Path("a/1.10.0"), Path("a/1.2.0")], key=k, reverse=True)
+    chk([p.name for p in order] == ["1.10.0", "1.9.0", "1.2.0"], "plugin version sort is numeric")
+    chk(k(Path("a/1.0.0-beta")) < k(Path("a/1.0.0")), "prerelease sorts below release")
+
+    prev = os.environ.pop("WRITER_STYLE_SKILL", None)
+    home, repo = Path.home, REPO
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            # an explicit, valid override wins outright
+            fake = root / "override" / "skills" / "writer-style" / "tools"
+            fake.mkdir(parents=True)
+            (fake / "validate_voice.py").write_text("")
+            os.environ["WRITER_STYLE_SKILL"] = str(fake.parent)
+            chk(writer_style_dir() == fake.parent, "explicit override wins")
+
+            # a bogus override degrades to discovery instead of hard-failing
+            globals()["REPO"] = root / "repo"
+            Path.home = staticmethod(lambda: root / "home")          # type: ignore[method-assign]
+            os.environ["WRITER_STYLE_SKILL"] = str(root / "nope")
+            chk(writer_style_dir() is None, "bogus override falls through")
+
+            # sibling dev checkout is found relative to REPO, not to $HOME
+            sib = root / "writer-style-skill" / "skills" / "writer-style" / "tools"
+            sib.mkdir(parents=True)
+            (sib / "validate_voice.py").write_text("")
+            del os.environ["WRITER_STYLE_SKILL"]
+            chk(writer_style_dir() == sib.parent, "sibling checkout found via REPO, not $HOME")
+
+            # nothing anywhere -> None, so the gates skip rather than crash.
+            # Nest one level down so REPO.parent has no sibling checkout either.
+            globals()["REPO"] = root / "deep" / "elsewhere"
+            chk(writer_style_dir() is None, "absent writer-style degrades to skip")
+    finally:
+        Path.home, globals()["REPO"] = home, repo                    # type: ignore[method-assign]
+        os.environ.pop("WRITER_STYLE_SKILL", None)
+        if prev is not None:
+            os.environ["WRITER_STYLE_SKILL"] = prev
+
     return 0 if ok else 1
 
 
