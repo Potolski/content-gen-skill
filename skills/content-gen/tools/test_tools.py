@@ -16,11 +16,13 @@ import verify_code
 import render_visuals
 import academy_export
 import verify_challenges
+import ci
 
 
 def main() -> int:
     rc = 0
-    for name, fn in [("course_lib", course_lib.selftest),
+    for name, fn in [("ci", ci.selftest),
+                     ("course_lib", course_lib.selftest),
                      ("validate_course", validate_course.selftest),
                      ("scaffold_course", scaffold_course.selftest),
                      ("verify_code", verify_code.selftest),
