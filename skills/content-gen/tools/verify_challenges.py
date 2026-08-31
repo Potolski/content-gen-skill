@@ -79,8 +79,48 @@ def _ts_primary(src: str) -> str | None:
     return m.group(1) if m else None
 
 
+# Faithful port of the upstream executor's detectFunctionName (challenge-executor
+# executor.ts): the FIRST match anywhere of `function name(` or `const name = (`
+# wins — INCLUDING a parenthesized non-function initializer like `const CAP = (10);`.
+# CI calls exactly this name, so the local harness must call it too.
+_CI_DETECT_RE = re.compile(r"(?:function\s+(\w+)\s*\(|(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?\()")
+
+
+def _ci_detected_fn(src: str) -> str | None:
+    m = _CI_DETECT_RE.search(src)
+    return (m.group(1) or m.group(2)) if m else None
+
+
+def _ci_esm_incompatible(src: str, which: str) -> str | None:
+    """Reject ESM syntax the upstream executor cannot splice.
+
+    The executor strips types with sucrase (typescript transform only,
+    disableESTransforms) and splices the result into a `new Function` body.
+    `export function` / `export const` survive type-stripping and are a
+    SyntaxError there — every test fails identically (seen live 2026-08-31:
+    PR #48 CI failed 5 challenges on exactly this while tsc passed locally).
+    `export interface` / `export type` are erased by sucrase, so they are
+    harmless. Imports are rewritten to `__modules__` lookups only for
+    single-line forms, and only "@solana/web3.js" is actually mocked — any
+    other import leaves names undefined (or raw ESM syntax). Challenges must
+    be self-contained: no imports, no value exports.
+    """
+    for ln_no, ln in enumerate(src.splitlines(), 1):
+        s = ln.lstrip()
+        if s.startswith("export ") and not re.match(r"export\s+(interface|type)\b", s):
+            return (f"{which}:{ln_no}: `export` on a value declaration is a SyntaxError "
+                    "inside the executor's Function splice — drop the export keyword")
+        if s.startswith("import"):
+            m = re.match(r"import\s*(?:\{[^}]+\}|\w+)\s*from\s*['\"]([^'\"]+)['\"]", s)
+            mod = m.group(1) if m else None
+            if mod != "@solana/web3.js":
+                return (f"{which}:{ln_no}: import of {mod or 'unparseable module'!r} — the "
+                        "executor mocks only '@solana/web3.js'; challenges must be self-contained")
+    return None
+
+
 def _ts_harness(src: str, tests: list) -> str | None:
-    prim = _ts_primary(src)
+    prim = _ci_detected_fn(src)
     if not prim:
         return None
     parts = [src, "\n;(() => {\n  const __out: any[] = [];\n"]
@@ -295,6 +335,11 @@ def verify_one(ch: dict, course_dir: Path, skip_rust: bool) -> dict:
             return {"tag": tag, "status": "FAIL", "why": bad}
     starter_src = ch["starter"].read_text("utf-8")
     solution_src = ch["solution"].read_text("utf-8")
+    if lang == "typescript":
+        for which, src_txt in (("starter.ts", starter_src), ("solution.ts", solution_src)):
+            bad = _ci_esm_incompatible(src_txt, which)
+            if bad:
+                return {"tag": tag, "status": "FAIL", "why": bad}
 
     def run(src):
         if lang == "typescript":
@@ -380,6 +425,18 @@ def selftest() -> int:
     # Upstream splits input on commas; an object literal becomes `var { owner: 'x' = {};`
     # and fails every case. Locally we splice input verbatim, so without this gate the
     # challenge passes here and fails in CI (seen on m08-l1/wire-kit-swap-client).
+    chk(_ci_detected_fn("const CAP = (10);\nfunction real(a: number) { return a; }") == "CAP",
+        "ci detect mirrors executor first-match (even non-function const)")
+    chk(_ci_detected_fn("// intro\nfunction toBaseUnits(a: string) { return a; }") == "toBaseUnits",
+        "ci detect finds function decl")
+    chk(_ci_esm_incompatible("export function f(a: number) { return a; }", "solution.ts"),
+        "esm: export function rejected")
+    chk(not _ci_esm_incompatible("export interface X { a: number }\nexport type Y = string;\nfunction f() {}", "s"),
+        "esm: type-only exports allowed (sucrase erases them)")
+    chk(_ci_esm_incompatible("import { x } from 'node:fs';\nfunction f() {}", "s"),
+        "esm: non-mocked import rejected")
+    chk(not _ci_esm_incompatible("import { Keypair } from '@solana/web3.js';\nfunction f() {}", "s"),
+        "esm: mocked web3.js import allowed")
     chk(_ci_arg_incompatible([{"id": "t1", "input": "{ owner: 'x', amountIn: 1n }"}]),
         "object-literal test input rejected (upstream grader cannot call it)")
     chk(not _ci_arg_incompatible([{"id": "t1", "input": "'x', 1000000n, 'bh', '^7.0.0'"}]),
