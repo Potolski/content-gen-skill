@@ -91,6 +91,10 @@ _FORBIDDEN_CSS = ("box-shadow", "background-image:url(", "background-image: url(
                   "font-stretch", "position:fixed", "position: fixed",
                   "display:contents", "display: contents")
 
+# Any HTML comment. Used to test what the page actually RENDERS: authoring notes name
+# the very constructs they warn against, so a raw substring scan flags its own prose.
+_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
+
 
 def _viz_inner(html: str) -> str:
     """The authored `.viz` content (so lint checks the author's CSS, not the head/decor)."""
@@ -397,14 +401,18 @@ def cmd_render(course_dir: Path, dpi: int, only: str | None) -> int:
     return 1 if fail else 0
 
 
-def cmd_review(course_dir: Path) -> int:
+def cmd_review(course_dir: Path, only: str | None = None) -> int:
     """Deterministic QA pass over authored cards: page-overflow, within-page clip (content taller
     than the ~756px safe area — vertical centering hides it from the page count), and forbidden-CSS
     lint. This is the automated backstop; it catches the overflow + clipped-edge classes. Internal
     overlaps, misaligned or out-of-bounds components, malformed borders, unanchored connectors, and
     low contrast are NOT statically detectable — a reviewer must VIEW each PNG per visual-review.md."""
+    # `--only` matters here as much as it does for render: this pass re-renders a PDF per card,
+    # so a whole course is ~50 min and a per-lesson reviewer cannot wait for it. Without the
+    # filter the flag was silently ignored and the sweep re-scanned all 244 cards.
     items = [it for it in work_list(course_dir)
-             if it["html"].exists() and "TODO(render)" not in it["html"].read_text("utf-8")]
+             if (not only or only in it["asset_id"])
+             and it["html"].exists() and "TODO(render)" not in it["html"].read_text("utf-8")]
     have_wp = bool(shutil.which("weasyprint"))
     if not have_wp:
         print("review: weasyprint absent — running CSS lint only (no overflow check).", file=sys.stderr)
@@ -675,7 +683,11 @@ def cmd_render_banner(course_dir: Path, dpi: int, html_file: str | None = None) 
         print(f"render-banner: {p['html'].name} is still the unauthored starter (TODO marker present)",
               file=sys.stderr)
         return 2
-    bad = [b for b in _FORBIDDEN_CSS if b in html]
+    # Markup only: the scaffold's own authoring comment names both the forbidden CSS and
+    # the backdrop file, so testing raw text puts every freshly scaffolded banner in
+    # photo mode (and flags CSS it merely warns about).
+    live = _COMMENT_RE.sub("", html)
+    bad = [b for b in _FORBIDDEN_CSS if b in live]
     if bad:
         print(f"render-banner: FAIL forbidden CSS in {p['html'].name}: {', '.join(bad)}")
         return 1
@@ -684,7 +696,7 @@ def cmd_render_banner(course_dir: Path, dpi: int, html_file: str | None = None) 
               "(`pip install weasyprint`; needs pango/cairo).", file=sys.stderr)
         return 0
     params = _banner_bg_params(html)
-    if params["file"] in html:
+    if params["file"] in live:
         if p["bg"] is None:
             print(f"render-banner: FAIL {p['html'].name} references {params['file']} but no "
                   "branding/banner-bg.{png,jpg,jpeg,webp} exists")
@@ -837,7 +849,7 @@ def main(argv=None) -> int:
     if a.cmd == "render":
         return cmd_render(course, a.dpi, a.only)
     if a.cmd == "review":
-        return cmd_review(course)
+        return cmd_review(course, a.only)
     if a.cmd == "check":
         return cmd_check(course)
     if a.cmd == "scaffold-banner":
