@@ -141,7 +141,7 @@ def _cover(m: dict, modules: list[dict], flat: list[dict]) -> str:
     who = AUD.get(aud.get("who"), aud.get("who", "?"))
     line = "This course is written for **" + who + "**."
     if aud.get("prerequisites"):
-        line += " Assumed background: " + ", ".join(aud["prerequisites"]) + "."
+        line += " Assumed background: " + "; ".join(aud["prerequisites"]) + "."
     L += ["## Who this course is for", "", line]
     if aud.get("prior_model"):
         L += ["", aud["prior_model"]]
@@ -157,7 +157,7 @@ def _cover(m: dict, modules: list[dict], flat: list[dict]) -> str:
     if builds:
         L += ["## What you'll build", "",
               "One toolkit repo grows across the course - each project below is a "
-              "rung, and the last one is assembled from all the earlier ones:", ""]
+              "rung built on the ones before it:", ""]
         for n, (name, blurb, mtitle) in enumerate(builds, 1):
             row = str(n) + ". **`" + name + "`**"
             if blurb:

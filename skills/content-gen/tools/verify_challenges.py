@@ -100,6 +100,46 @@ def _ts_harness(src: str, tests: list) -> str | None:
     return "".join(parts)
 
 
+# Names the upstream grader binds itself (challenge-executor `buildArgSetup`); a bare
+# identifier fragment is only safe if it is one of these or a plain identifier.
+_CI_KNOWN_ARGS = {
+    "connection", "wallets", "data", "buffer", "expectedSeeds", "account", "position",
+    "payer", "sender", "recipient", "owner", "authority", "mint", "senderKeypair",
+    "recipientKeypair", "userKeypair", "programId", "userPubkey", "recipientPubkey",
+    "senderPublicKey", "expectedOwner", "tokenProgramId", "systemProgramId", "dataAccount",
+}
+_IDENT_RE = re.compile(r"^[A-Za-z_$][\w$]*$")
+
+
+def _ci_arg_incompatible(tests: list) -> str | None:
+    """Reject test inputs the upstream grader cannot call.
+
+    Upstream splits `input` on commas and, for any fragment that is not a number,
+    quoted string, or boolean/null, emits `var <fragment> = {};`. A single object
+    literal — `{ owner: 'x', amountIn: 1n }` — therefore becomes
+    `var { owner: 'x' = {};`, a syntax error that fails EVERY case with an identical
+    message. Locally we splice `input` verbatim, so the same challenge passes here and
+    fails in CI. Model their rule instead of ours.
+    """
+    for t in tests:
+        inp = str(t.get("input", "")).strip()
+        if not inp:
+            continue
+        for frag in (f.strip() for f in inp.split(",")):
+            if not frag:
+                continue
+            if re.match(r"^\d", frag) or re.match(r"^-?\d*\.?\d+$", frag):
+                continue                                   # number (incl. 123n)
+            if frag[0] in "'\"" or frag in ("true", "false", "null"):
+                continue                                   # string / literal
+            if frag in _CI_KNOWN_ARGS or _IDENT_RE.match(frag):
+                continue                                   # bare identifier upstream binds
+            return (f"test {t.get('id','?')!r} input is not callable by the upstream grader: "
+                    f"fragment {frag[:40]!r} would become `var {frag[:20]} = {{}};`. "
+                    "Use positional scalars (quoted strings / numbers), not an object literal.")
+    return None
+
+
 def _find_tsc(course_dir: Path) -> str | None:
     local = course_dir / "verify-ts" / "node_modules" / ".bin" / "tsc"
     if local.exists():
@@ -172,6 +212,18 @@ def run_rust_standard(src: str, tests: list) -> tuple[str, dict]:
 
 
 def _rust_primary(src: str) -> str:
+    """The free function the tests call.
+
+    Must skip trait/impl methods: a challenge that models a trait (`fn check(&self, ..)`)
+    declares its method BEFORE the entry point, and calling that method as a free
+    function does not compile — which the runner would otherwise report as the
+    solution failing every test. Prefer a column-0 `fn` that takes no `self`.
+    """
+    free = [m for m in re.finditer(r"^(?:pub(?:\([^)]*\))?\s+)?(?:async\s+)?fn\s+([A-Za-z_]\w*)\s*\(([^)]*)",
+                                   src, re.M)
+            if not re.match(r"\s*(?:&(?:'\w+\s+)?)?(?:mut\s+)?self\b", m.group(2))]
+    if free:
+        return free[-1].group(1)                       # entry point is conventionally last
     m = re.search(r"\bfn\s+([A-Za-z_][\w]*)\s*\(", src)
     return m.group(1) if m else "solution"
 
@@ -237,6 +289,10 @@ def verify_one(ch: dict, course_dir: Path, skip_rust: bool) -> dict:
     tests = _load_tests(ch["tests"])
     if not tests:
         return {"tag": tag, "status": "SKIP", "why": "tests.json empty/invalid"}
+    if lang == "typescript":
+        bad = _ci_arg_incompatible(tests)
+        if bad:
+            return {"tag": tag, "status": "FAIL", "why": bad}
     starter_src = ch["starter"].read_text("utf-8")
     solution_src = ch["solution"].read_text("utf-8")
 
@@ -311,8 +367,25 @@ def selftest() -> int:
     chk(_ts_primary("function assembleDeposit(a){return a}") == "assembleDeposit", "ts primary (function)")
     chk(_ts_primary("export const f = (x) => x") == "f", "ts primary (arrow const)")
     chk(_rust_primary("fn add(a:i64,b:i64)->i64{a+b}") == "add", "rust primary")
+    # A trait/impl method declared before the entry point must not be mistaken for it:
+    # calling `check(500, 100)` as a free fn does not compile, and the runner would have
+    # scored that as the solution failing every test.
+    chk(_rust_primary(
+        "pub trait C {\n    fn check(&self, b: u64) -> bool;\n}\n"
+        "impl C for M {\n    fn check(&self, b: u64) -> bool { true }\n}\n"
+        "pub fn run_constraint(b: u64, m: u64) -> bool { true }\n"
+    ) == "run_constraint", "rust primary skips trait/impl methods")
     h = _ts_harness("function add(a,b){return a+b}", [{"id": "t1", "input": "2,3", "expectedOutput": "result === 5"}])
     chk(h and "const result: any = (add)(2,3);" in h and "!!(result === 5)" in h, "ts harness splices input+expr")
+    # Upstream splits input on commas; an object literal becomes `var { owner: 'x' = {};`
+    # and fails every case. Locally we splice input verbatim, so without this gate the
+    # challenge passes here and fails in CI (seen on m08-l1/wire-kit-swap-client).
+    chk(_ci_arg_incompatible([{"id": "t1", "input": "{ owner: 'x', amountIn: 1n }"}]),
+        "object-literal test input rejected (upstream grader cannot call it)")
+    chk(not _ci_arg_incompatible([{"id": "t1", "input": "'x', 1000000n, 'bh', '^7.0.0'"}]),
+        "positional scalar test input accepted")
+    chk(not _ci_arg_incompatible([{"id": "t1", "input": "connection, owner, 42"}]),
+        "bare identifiers the grader binds are accepted")
     chk(_all_pass([{"ok": True}, {"ok": True}]) and not _all_pass([{"ok": True}, {"ok": False}]), "_all_pass")
     chk(_any_fail([{"ok": True}, {"ok": False}]) and not _any_fail([{"ok": True}]), "_any_fail")
 

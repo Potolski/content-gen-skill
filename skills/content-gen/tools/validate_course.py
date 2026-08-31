@@ -613,6 +613,14 @@ def check_drafts(course_dir, m: dict | None = None) -> dict:
                     or low.startswith(("image of", "diagram of", "visual of", "illustration of"))):
                 flags.append(f"{ADV}draft {p.name}: alt text weak ({alt[:50]!a}) — one 8-30 word "
                              f"sentence that stands in for the visual, not a label")
+            # The alt becomes `![<alt>](assets/….png)`. A literal ']' — which Rust attribute
+            # syntax like `#[account(borsh)]` carries — closes the alt early for a regex
+            # markdown parser, so upstream never sees the image reference and fails the
+            # PNG as an orphan file (gate-5). Name the attribute in prose instead.
+            if "]" in alt or "[" in alt:
+                flags.append(f"{HARD}draft {p.name}: alt text contains a square bracket "
+                             f"({alt[:60]!a}) — it truncates the ![alt](...) reference upstream "
+                             f"and the image is then reported as an orphan; write it without brackets")
 
         # text-block aesthetics: prose walls
         if mx["longest_wall"] > WALL_HARD:
@@ -645,9 +653,29 @@ def check_drafts(course_dir, m: dict | None = None) -> dict:
                   "cargo build-sbf": "rustup", "cargo new": "rustup", "anchor ": "avm",
                   "solana ": "release.anza.xyz", "solana-keygen": "release.anza.xyz",
                   "bitcoind": "bitcoin", "npx tsx": "npm install", "ts-node": "npm install"}
+        # Look for the tool as an actual COMMAND, i.e. inside a shell fence and at the start of a
+        # line (allowing $/# prompts and a leading env assignment). Two false-positive classes made
+        # the prose-wide substring version useless: `"forge" in text` fires on "forgets"/"forgery",
+        # and even with word boundaries `cast` is ordinary English in a zero-copy course ("byte
+        # cast", "castable") — it flagged 25 of 30 anchor-v2 drafts for Foundry that is never used.
+        _shell = []
+        _in, _lang = False, ""
+        for _ln in text.split("\n"):
+            _s = _ln.strip()
+            if _s.startswith("```"):
+                if not _in:
+                    _in, _lang = True, _s[3:].strip().lower()
+                else:
+                    _in, _lang = False, ""
+                continue
+            if _in and _lang in ("bash", "sh", "shell", "console", "zsh"):
+                _shell.append(_ln)
+        _cmds = "\n".join(_shell).lower()
         _low = text.lower()
         for tool, installer in _TOOLS.items():
-            if tool in _low and installer.lower() not in _low and "install" not in _low.split(tool)[0][-400:]:
+            t = re.escape(tool.strip())
+            m = re.search(rf"^[ \t]*(?:[$#][ \t]*)?(?:[A-Z_]+=\S+[ \t]+)*{t}\b", _cmds, re.M)
+            if m and installer.lower() not in _low:
                 flags.append(f"{ADV}draft {p.name}: invokes `{tool.strip()}` but shows no install step "
                              f"(expected `{installer}` or an install line) — beginners hit command-not-found")
                 break

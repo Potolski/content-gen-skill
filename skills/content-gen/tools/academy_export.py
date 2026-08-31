@@ -160,7 +160,8 @@ def _skills_for(brief: dict, mod: dict, cfg: dict) -> list[str]:
     return out
 
 
-def plan_academy(course_dir: Path, cfg: dict, m: dict) -> tuple[dict[str, str], list[str], list[tuple[str, str]]]:
+def plan_academy(course_dir: Path, cfg: dict, m: dict,
+                 out_dir: Path | None = None) -> tuple[dict[str, str], list[str], list[tuple[str, str]]]:
     """Return ({relpath: text}, warnings, copies) for the whole academy tree.
     `copies` are (src_abs, rel_dest) for binary-safe file copies (challenge sources)."""
     files: dict[str, str] = {}
@@ -214,6 +215,30 @@ def plan_academy(course_dir: Path, cfg: dict, m: dict) -> tuple[dict[str, str], 
     ]
     files["course.yaml"] = to_yaml(course_doc)
 
+    # slots.lock.json — the on-chain lesson-slot assignment. CONTRIBUTING forbids editing it
+    # by hand (CI regenerates and compares), so a new course ships the initial lock: every
+    # lesson numbered 0..n-1 in course.yaml order, nothing retired yet. Re-exporting an
+    # already-published course must NOT renumber, so preserve any lock already on disk and
+    # only append lessons it has never seen.
+    ordered = [lid for mod in course_doc["modules"] for lid in mod["lessons"]]
+    prev = (out_dir / "slots.lock.json") if out_dir else None
+    slots, retired = {}, []
+    if prev is not None and prev.is_file():
+        try:
+            old = json.loads(prev.read_text("utf-8"))
+            slots = dict(old.get("slots", {}))
+            retired = list(old.get("retired", []))
+        except (json.JSONDecodeError, OSError):
+            slots, retired = {}, []
+    nxt = max([*slots.values(), *retired, -1]) + 1
+    for lid in ordered:
+        if lid not in slots:
+            slots[lid] = nxt
+            nxt += 1
+    files["slots.lock.json"] = json.dumps(
+        {"version": 1, "slots": {k: slots[k] for k in ordered}, "retired": retired, "next": nxt},
+        indent=2) + "\n"
+
     # per-lesson tree
     for l in lessons:
         brief = l.get("brief", {}) or {}
@@ -246,6 +271,13 @@ def plan_academy(course_dir: Path, cfg: dict, m: dict) -> tuple[dict[str, str], 
                 if img.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp", ".gif"):
                     copies.append((str(img.resolve()), f"{ldir}/assets/{img.name}"))
             for html in sorted(asset_dir.glob("v*.html")):
+                # `<name>.__render.html` / `.__safe.html` are render intermediates, written and
+                # usually deleted per render. Shipping them would put orphan duplicates in the
+                # PR and make the export non-deterministic (the set depends on whether a
+                # render was mid-flight), so only the authored source ships. Match the whole
+                # `.__*.html` family — an interrupted run leaves whichever stage it died in.
+                if re.search(r"\.__[\w-]+\.html$", html.name):
+                    continue
                 copies.append((str(html.resolve()), f"visual-src/{slug}/{html.name}"))
 
         blocks: list[dict] = [{"key": "intro", "type": "prose", "src": "intro.md"}]
@@ -313,8 +345,8 @@ def emit(course_dir: str, out_dir: str, opts: dict, force: bool) -> int:
     course_dir = Path(course_dir)
     m = load_manifest(course_dir)
     cfg = _academy_cfg(m, opts)
-    files, warnings, copies = plan_academy(course_dir, cfg, m)
     out = Path(out_dir)
+    files, warnings, copies = plan_academy(course_dir, cfg, m, out_dir=out)
     written = 0
     for rel, content in files.items():
         target = out / rel
