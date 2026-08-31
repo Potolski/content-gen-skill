@@ -119,6 +119,27 @@ def _ci_esm_incompatible(src: str, which: str) -> str | None:
     return None
 
 
+# Web platform APIs absent from the executor's bare JS realm (it mocks only
+# TextEncoder/TextDecoder). `new URLSearchParams(...)` threw ReferenceError on
+# every test of m06-l1 in CI (2026-08-31) while node ran it fine locally.
+_CI_MISSING_GLOBALS = re.compile(
+    r"\b(URLSearchParams|URL|fetch|Buffer|btoa|atob|XMLHttpRequest|Headers|Request|Response"
+    r"|structuredClone|crypto)\b"
+)
+
+
+def _ci_globals_incompatible(src: str, which: str) -> str | None:
+    code = re.sub(r"/\*.*?\*/", "", src, flags=re.S)
+    for ln_no, ln in enumerate(code.splitlines(), 1):
+        ln = ln.split("//")[0]
+        m = _CI_MISSING_GLOBALS.search(ln)
+        if m:
+            return (f"{which}:{ln_no}: uses `{m.group(1)}` — the executor sandbox is a bare JS "
+                    "realm without web APIs (only TextEncoder/TextDecoder are mocked); "
+                    "every test would throw ReferenceError. Use core-JS equivalents.")
+    return None
+
+
 def _ts_harness(src: str, tests: list) -> str | None:
     prim = _ci_detected_fn(src)
     if not prim:
@@ -337,7 +358,7 @@ def verify_one(ch: dict, course_dir: Path, skip_rust: bool) -> dict:
     solution_src = ch["solution"].read_text("utf-8")
     if lang == "typescript":
         for which, src_txt in (("starter.ts", starter_src), ("solution.ts", solution_src)):
-            bad = _ci_esm_incompatible(src_txt, which)
+            bad = _ci_esm_incompatible(src_txt, which) or _ci_globals_incompatible(src_txt, which)
             if bad:
                 return {"tag": tag, "status": "FAIL", "why": bad}
 
@@ -437,6 +458,12 @@ def selftest() -> int:
         "esm: non-mocked import rejected")
     chk(not _ci_esm_incompatible("import { Keypair } from '@solana/web3.js';\nfunction f() {}", "s"),
         "esm: mocked web3.js import allowed")
+    chk(_ci_globals_incompatible("const q = new URLSearchParams({ a: '1' });", "s"),
+        "globals: URLSearchParams rejected (bare sandbox)")
+    chk(not _ci_globals_incompatible("// URLSearchParams is unavailable, so:\nconst q = 'a=1';", "s"),
+        "globals: mention in comment allowed")
+    chk(not _ci_globals_incompatible("const b = new TextEncoder().encode(s);", "s"),
+        "globals: mocked TextEncoder allowed")
     chk(_ci_arg_incompatible([{"id": "t1", "input": "{ owner: 'x', amountIn: 1n }"}]),
         "object-literal test input rejected (upstream grader cannot call it)")
     chk(not _ci_arg_incompatible([{"id": "t1", "input": "'x', 1000000n, 'bh', '^7.0.0'"}]),
