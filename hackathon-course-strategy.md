@@ -1,6 +1,6 @@
 # Strategy memo — "Solana Hackathon Expert: Build a Winning Project"
 
-Status: **v0.2, session 1 complete** (2026-09-05 → 06). D1–D7, D9 decided; D8 pending David; §5 facts captured. Every proposal below
+Status: **v0.5** (2026-09-05 → 06). D1–D14 decided (Kaue’s answers folded in 09-06); charter v1.0 signed; outline-v2 approved; manifest emitted. Every proposal below
 is a concrete default on the table, not a decision. Decisions land in the decision-log section at the
 bottom and then flow into the charter/outline per `course-methodology.md`.
 
@@ -271,11 +271,13 @@ submission mechanics) are the ones a team mid-hackathon would pay for; flag as a
 | D2 | Journey vs skill shape | **Journey-shaped modules, skill-shaped lessons** | The month is the ladder and the hook; skill lessons keep it usable off-season and re-enterable mid-season. | 2026-09-05 (David) |
 | D3 | Agent tooling centrality | **Spine of the build, not the subject** | Promise stays "submission-ready package"; kit inventory is smaller than the dossier claims, so names are pinned facts with freshness notes, never the identity. | 2026-09-05 (David) |
 | D4 | Assessment model | **Quiz + artifact gates only; no coding challenges** | Process/strategy course; a TS challenge would grade a proxy, not the skill. `openEnded` reflections in strategy lessons; the capstone is the assembled package. §4's four TS challenge ideas are parked in the expansion memo. | 2026-09-05 (David) |
-| D5 | Course language | **EN source + PT-BR l10n overlay** (confirm with Kaue) | Voice pack is calibrated on English; repo supports overlays (academy-courses #51). Seasonal module gets the overlay first. | 2026-09-05 (David); Kaue to confirm |
+| D5 | Course language | **EN source now; PT-BR overlay later** (confirmed) | Voice pack is calibrated on English; repo supports overlays (academy-courses #51) but the app does not render them yet. "Start with english and create pt-br later." | 2026-09-06 (Kaue via David) |
 | D6 | Scale (modules / lessons) | **5 core modules / 14 lessons + optional M6 of 2** (default, taken as accepted unless David objects at outline review) | btc-to-sol's neighborhood (7/15) per the brief; S1–S3 fit inside existing lessons without adding any. | 2026-09-06 |
 | D7 | Seasonal module optional vs core | **Optional** (owner's default, kept under D1) | Seasonal is an adapter over the same package; F9/F10 give it its own payoff story. | 2026-09-06 |
 | D8 | Naming the chain in David's win (F4) | **"A hackathon in Dubai"; chain not named** | His call: his own win is usable, the competing chain is not named in a Solana course. Writers must not add the chain back in. | 2026-09-06 (David) |
 | D11 | Creator wallet | **`8kMziL5e3qEWhp1nQHEiYLRypymyBVTXNxgZXyQwhbSo`** | David's wallet; immutable once the course is created on-chain. | 2026-09-06 (David) |
 | D12 | Worked-example domain | **"Fiado"** (corner-shop credit notebook → stablecoin-settled tab) | Day-to-day problem (F8), felt opener (F6), two-week slice, honest why-Solana. David re-reviews at outline review. | 2026-09-06 (David) |
 | D10 | Where the course PR lands | **`solanabr/academy-courses`, branch off fresh main, touch only `courses/solana-hackathon-expert/`, trackId 0 / trackLevel 0** | Elective lane per CATALOG.md addendum; PR #48's body is the template. | 2026-09-06 (David) |
-| D9 | Third-party stories (Cloak, Bido) | **Write-time probes; not written until verified** | Names, outcomes and the US$ 2M figure are exactly the confidently-precise class the fact layer exists for. | 2026-09-06 |
+| D9 | Third-party stories (Cloak, Bido) | **Tag by X handle only (x.com/cloak_ag, x.com/usebido); no founder names, no university, no raise figures beyond the public Colosseum US$250k for Cloak; Bido's raise stays unnumbered and attributed to David** | Kaue: "not really necessary to add so much personal info, just tag their X." Verified public facts only; the US$2M figure has no public source and is not written. | 2026-09-06 (Kaue via David) |
+| D13 | Course PR status at open | **Draft / WIP** with a TODO for a Superteam Brasil past-winner deck or demo video Kaue will try to source | Kaue: "leave this as todo in the PR and leave the PR as wip." | 2026-09-06 (Kaue via David) |
+| D14 | Kaue's answers to the remaining probes | Regulamento: link the Passo Fundo page only. Banca: unanswered, not named. Funnel numbers: unanswered, keep Cointelegraph. "Instagrants": outdated, link superteam.fun/earn/grants/solana-foundation-brazil-grants. Road to Colosseum for Brasil: link hackathon.superteam.com.br. World's Fair side track: expected to publish Sept 14. Wave-2 script pack: re-author if not present. | Answers in `questions-for-kaue.md`. | 2026-09-06 |
