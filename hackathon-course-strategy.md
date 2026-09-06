@@ -17,16 +17,25 @@ and the course writes them season-swappable ("as of the 2026 World's Fair season
 
 ### Colosseum (global) — a venture competition, explicitly
 
-- Current season: **Crypto World's Fair, hackathon Sep 14 to Oct 12 2026**, registration open, ~690
-  builders in the arena at snapshot time. Colosseum runs global hackathons **twice a year** plus
-  **Eternal**, an on-demand four-week startup sprint. (colosseum.com/hackathon)
-- Multi-chain now ("open to builders across all blockchain ecosystems", with per-ecosystem prize
-  tracks). Solana is a track, not the whole field. This changes the "why Solana" lesson: it is a
-  judged claim, not the default.
-- **Stated judging factors** (verbatim categories): Founder + Market Fit · Insight · Product +
-  Execution · Potential Market Size · Founder Communication · Business Model · Traction. Then
-  multiple internal evaluation rounds → shortlist → judge panel → **15-minute Zoom interview** for a
-  smaller group → winners ~1 month after the deadline.
+- Current season: **Crypto World's Fair, hackathon Sep 14 to Oct 12 2026**, registration open, 835
+  builders in the arena (2026-09-06 re-check; 690 on 09-05). Colosseum runs global hackathons
+  **twice a year** (Apr–May, Sep–Oct) plus **Eternal**, a self-started four-week sprint in the
+  windows between (Nov–Mar, Jun–Aug; paused at snapshot; US$25k semi-annual Eternal Award).
+- Multi-chain ("open to builders across all blockchain ecosystems", ecosystem prize tracks: Solana,
+  Ethereum, Hyperliquid, Base, Tempo, Arbitrum, Zcash, Robinhood Chain on the World's Fair page).
+  **Solana is a track, not the field; the Accelerator is Solana-only** ("some form of Solana
+  integration is required"). The "why Solana" lesson argues the chain choice for both the track and
+  the accelerator. Tracks, prizes and judges for World's Fair publish Sept 14 (write-time probe).
+- **Stated judging factors** (verbatim, seven): Founder + Market Fit · Insight · Product + Execution
+  · Potential Market Size · Founder Communication · **Viability** · Traction (Eternal lists six, no
+  Traction). Process: multiple internal rounds → shortlist → judge panel → **15-minute Zoom
+  interview** for a smaller group → winners ~1 month after the deadline.
+- **What the repo review is NOT about (verbatim spirit):** they want "significant work during the
+  hackathon", by the team "rather than a third party", features "prioritized strategically"; and
+  explicitly *not* language, framework, patterns or code quality. This is F1 in Colosseum's own
+  words, and it goes in lesson 2. Teams are "judged only on the work completed between the
+  competition's start and end dates"; pre-existing code must be disclosed. Weekly one-minute update
+  videos are optional but "strongly recommended" (a narrative-capture rung, L9).
 - **Submission portal asks for**: product name + description; chains/tools used; team backgrounds;
   team location; logo; GitHub repo (private allowed if hackathon@colosseum.com gets access); a
   **2–3 minute presentation video** ("one of the first resources judges review"); a **≤3 minute
@@ -42,12 +51,22 @@ and the course writes them season-swappable ("as of the 2026 World's Fair season
 
 ### Superteam Earn (national / regional)
 
-- earn.superteam.fun is **bounties / projects / grants** with sponsor listings, 213k+ users. There
-  is no dedicated `/hackathon` route at snapshot time (404). National hackathon tracks appear as
-  listings; **payouts for the seasonal hackathon are also made through Earn** (Passo Fundo page says
-  so explicitly). So Earn is (a) where national tracks get submitted and (b) the payment rail for
-  everything else, and (c) the post-hackathon income surface. Phase-2 research must confirm the
-  listing/submission flow with Kaue (Superteam Brazil runs it).
+- earn.superteam.fun is **bounties / projects / grants**, 213k+ users, 2,680+ sponsors. (Corrected
+  2026-09-06: `/hackathon` is 404 but **`/hackathon/all` "Hackathon Tracks" and per-season pages
+  `/hackathon/frontier`, `/hackathon/cypherpunk` are live.**) The mechanism the dossier guessed at
+  exists: **regional Superteams attach "side tracks" to each global season**, submitted separately
+  from the Colosseum main tracks. Frontier: 54 side tracks, US$439,410, including **"Side Track
+  Superteam Brasil", US$10,000 USDG**; Cypherpunk: 41 side tracks, US$341,750, incl. Superteam Brasil
+  × Tangem, US$11,200. No World's Fair side track yet (probe).
+- Brazilian seasonal hackathons appear on Earn as **region-scoped bounties** (Hackathon Universitária
+  US$3,000, 1500/1000/500 USDG; Vibeathon Superteam × Replit US$3,000) with an `eligibility` custom
+  form (deck link, MVP link, social post), a UTC deadline, and Telegram PoC. Vibeathon is *submitted*
+  on Earn; Passo Fundo is submitted on the STBR platform and *paid* through Earn. So Earn is: the
+  side-track surface of every global season, sometimes the submission surface, always the payout
+  rail (Earn → USDG → Jupiter → Pix via 4P Finance, the "Do Earn ao Pix" guide), and the grants
+  surface after ("Solana Foundation Brazil Grants", up to US$10,000 USDG).
+- Route quirk: send learners to `superteam.fun/earn`; deep links with `/earn/` prefix 404 to a plain
+  fetch.
 
 ### Seasonal / local — Solana × Cursor, Passo Fundo 2026 (the swappable worked example)
 
@@ -56,8 +75,18 @@ and the course writes them season-swappable ("as of the 2026 World's Fair season
   platform) → selection Sep 10 → **Phase 2 in person**, Pitch Day at UPF Parque Sep 12: **5-minute
   pitch, no questions**, same-day deliberation.
 - Teams of 2–4, 18+, one team per person, at least one member physically present at the final.
+- **Deliverables (2026-09-06):** a **10-slide deck** (capa, problema, solução, arquitetura, mercado
+  TAM/SAM/SOM, equipe, próximos passos, CTA), a **demo video ≤3 min**, **one GitHub repo** (private
+  OK with read access for @hackathon-pf). **Any missing item disqualifies.** Finalists may update
+  until day 12. Theme is free; Cursor "incentivado". A "regulamento" is referenced but not linked
+  (ask Kaue).
 - **Rubric, 0–10 per criterion, mean ranks**: Execução técnica · Inovação · Impacto · Apresentação.
-  Tie-break: technical execution.
+  Tie-break: technical execution. Phase 2: banca scores the 5-minute pitches, mean decides. Banca not
+  named on the page (probe). Schedule includes Derick Nina, "Pitch e Modelo de Negócio" (Sept 4).
+- The STBR platform index shows three concurrent editions (Vibeathon online, Passo Fundo, Hackathon
+  Universitário) with one shared flow: register → build with the WhatsApp community → submit deck +
+  demo video + repo → finalists pitch to a banca → "Como receber o prêmio" (Earn-to-Pix guide). This
+  shared flow is what the seasonal module teaches; the edition is the swappable example.
 - Prizes: US$ 3,000 total (1,500 / 900 / 450 / 150 honorable mention) + Apollo incubator mentoring
   and a possible incubation invite. Kauê is on the schedule (Sep 3, "Desenvolvimento em Solana").
 - Framing on the page: "Não precisa ser expert", regional-market / agro challenges. The audience for
@@ -68,7 +97,7 @@ and the course writes them season-swappable ("as of the 2026 World's Fair season
 Every surface scores the same four things under different names: **the problem is real (impact /
 insight / market)** · **the thing works (execution / product)** · **the story lands (presentation /
 founder communication / video)** · **this team can carry it (founder-market fit / team)**. Colosseum
-adds two that the others do not: **business model** and **traction**. A project built to clear
+adds two that the others do not: **viability** and **traction**. A project built to clear
 Colosseum's bar clears the other two; the reverse is not true. That asymmetry is proposal 1.
 
 ---
@@ -87,8 +116,9 @@ Colosseum's bar clears the other two; the reverse is not true. That asymmetry is
 - Default stays the owner's: one course, three surfaces, seasonal module optional. Restructure only
   if David wants to narrow (e.g. Colosseum + seasonal, Earn as a lesson rather than an adapter).
 
-Open for David: is Earn a real *hackathon* surface in Brazil right now, or mostly the payout and
-post-hackathon rail? His answer decides whether Earn gets an adapter lesson or one section.
+Resolved by research (2026-09-06): Earn is a real hackathon surface (regional side tracks on every
+global season, plus region-scoped hackathon bounties) and the payout rail. The Earn adapter is a
+lesson: "side track + regional bounty: submit the same package twice, correctly".
 
 ## 2. Journey-shaped vs skill-shaped
 
@@ -111,14 +141,20 @@ post-hackathon rail? His answer decides whether Earn gets an adapter lesson or o
   with agents". Every build lesson runs through the kit (idea sprint, Colosseum research, scaffold,
   pitch deck, video), one setup lesson installs it, and the course states plainly that an agent
   team is how a 2–4 person team ships a demoable slice in two weeks in 2026.
-- Why not the differentiator: **the dossier's tooling inventory is over-stated.** Verified on
-  2026-09-05 in `solanabr/solana-ai-kit`: `plugin/skills/` ships **`hackathon`, `idea-sprint`,
-  `pitch-deck`** (as submodules) plus `ext/colosseum` (Copilot wrapper) and the general ext skills
-  (helius, solana-dev, sendai, metaplex, …). `find-next-crypto-idea`, `validate-idea`,
-  `competitive-landscape`, `marketing-video`, `roast-my-product`, `product-review`, `cso`,
-  `submit-to-hackathon` do **not** exist under those names at snapshot time. Phase-2 research must
-  map each course step to a skill that actually exists (or to a plain Claude Code workflow) before
-  any brief promises one. A course whose identity is "the 20 kit skills" rots with the kit.
+- Why not the differentiator: **the dossier's tooling inventory is a superset of what the plugin
+  install ships.** Verified 2026-09-06 in `solanabr/solana-ai-kit` (research digest §4): the plugin
+  ships three GTM skills as local wrappers (symlinked into `plugin/skills/`), each "adapted from
+  sendaifun/solana-new, telemetry removed": **`hackathon`** (track choice via live crowdedness,
+  scannable description, <3-min demo script, submission checklist, grants after), **`idea-sprint`**
+  (interview → crypto-necessity gate → 3 candidates → score /15 → go/no-go → `idea.md`),
+  **`pitch-deck`** (audience-specific: hackathon judges = 5–7 slides, working demo, technical
+  novelty, why-Solana), plus **`ext/colosseum`** = Colosseum Copilot (5,400+ projects, needs a PAT).
+  The rest of the dossier's names (`validate-idea`, `competitive-landscape`, `defillama-research`,
+  `marketing-video`, `roast-my-product`, `cso`, `submit-to-hackathon`, …) exist **only upstream in
+  `ext/solana-new`**, reachable through the full install, with a hub warning never to run their
+  telemetry preambles. Rule for briefs: **teach the three wrappers + Copilot by name; everything
+  else is "a plain Claude Code workflow" unless phase-3 pins it.** A course whose identity is "the
+  20 kit skills" rots with the kit.
 - What the course *can* own: the **method** (the same four-criteria spine, the demoable-slice
   doctrine, the evidence pack), with tooling as the accelerant. Kit names are version-pinned facts
   with a freshness note, like an Anchor version.
@@ -163,8 +199,8 @@ outcome is written.
 | F6 | The demos he remembers opened on emotional attachment in the first 20 seconds: a problem people face in their own lives (wallet hacked, talking to a scammer, signing a malicious contract), told specifically, with the feeling of impotence at not being able to do anything about it. | observation | L12 (the two videos) |
 | F7 | Day-0 team needs a plan of action for the whole month. Someone must own competitor research (what they do right and wrong). Someone should go after adjacent projects as integration partners and sell them the idea; arriving at demo day with a few partners is an edge. | method | L3 (team + month plan), L5 (research role), L10 (GTM: partners) |
 | F8 | Good hackathon ideas came from problems the team members, or people close to them, face day to day. | observation | L4 (ideation) |
-| F9 | **Cloak**: a team of university students who won a track at a previous hackathon, got a large investment, and had a running company by graduation. *(probe: which hackathon, which track, investment size)* | third-party story, UNVERIFIED | L16 (local win compounds) / L14 |
-| F10 | **Bido**: two friends with no idea for a project went to Superteam Brazil mentoring sessions and ended up in Silicon Valley with a US$ 2M investment. *(probe: confirm with Kaue; name, round, date)* | third-party story, UNVERIFIED | L14 (after) / L16; also the M1 opener's "why this course" beat |
+| F9 | **Cloak**: a team of university students who won a track at a previous hackathon, got a large investment, and had a running company by graduation. **Probe result 2026-09-06 (digest §6):** Cloak placed **third in Cypherpunk's Stablecoin Track** (US$15k; Cointelegraph Brasil), four named founders with prior jobs (SonicSVM, Compute Labs, BTG Pactual), **US$250k Colosseum Accelerator pre-seed**, mainnet alpha; no page mentions a university. "Won a track" is REFUTED; students / larger raise UNCERTAIN. Ask Kaue before writing. | third-party story, PARTLY REFUTED | L16 (local win compounds) / L14, as "placed, then got funded", if Kaue confirms the rest |
+| F10 | **Bido**: two friends with no idea for a project went to Superteam Brazil mentoring sessions and ended up in Silicon Valley with a US$ 2M investment. **Probe result:** no public trace under that name (5 searches, EN + PT). Needs exact name, founders, round, a public source and consent from Kaue. | third-party story, UNVERIFIED | L14 (after) / L16 only if verified |
 
 Unanswered from the capture list (carry to session 2 or the outline review): what he accepts as
 one-week validation evidence (F-pending, L6), and whether he has seen a seasonal win reach Colosseum
