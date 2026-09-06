@@ -1,6 +1,6 @@
 # Strategy memo — "Solana Hackathon Expert: Build a Winning Project"
 
-Status: **DRAFT v0.1 for the session-1 working session with David** (2026-09-05). Every proposal below
+Status: **v0.2, session 1 complete** (2026-09-05 → 06). D1–D7, D9 decided; D8 pending David; §5 facts captured. Every proposal below
 is a concrete default on the table, not a decision. Decisions land in the decision-log section at the
 bottom and then flow into the charter/outline per `course-methodology.md`.
 
@@ -143,24 +143,45 @@ l10n overlays (`academy-courses` PR #51, merged; #53 used it for visão-geral). 
 (David's voice pack is calibrated on English), then overlay PT-BR for the seasonal module first and
 the whole course when it earns it. Decide with Kaue before the outline locks.
 
-## 5. What David uniquely knows (capture list for session 1)
+## 5. What David uniquely knows (captured 2026-09-05, session 1)
 
-These are sourced facts (attributed to David by name in the digest) AND the human-seam material for
-every lesson. Prompts, not a form:
+Sourced facts, attributed to **David Potolski Lafetá** by name in the research digest, and the
+human-seam material per lesson. Tag: `[david-2026-09-05]`. Attribution rules he set: **his judging
+experience is on other chains and is NOT to be discussed** in the course (the *lessons* from it are
+usable as his positions, the events are not); the SuiHubs win is his own story and is usable
+(confirm with him whether to name the chain, see D8). Two third-party stories (Cloak, Bido) are his
+recollection and are **write-time probes**: verify with Kaue / live sources before any number or
+outcome is written.
 
-- Hackathons you competed in or judged: which surface, which season, outcome. One line each.
-- The one thing that separated the winners you have seen from the rest. Then the second thing.
-- A project that lost that should have won, and why it lost (judging optics, scope, video, timezone?).
-- A project that won that surprised you.
-- Your own worst hackathon mistake, and when in the month it happened.
-- The demo video you remember. What it did in the first 20 seconds.
-- Team formation: what a 2–4 person hackathon team needs on day 0, and the role nobody fills.
-- Ideation: where good hackathon ideas actually came from in the teams you watched.
-- Validation in one week: what you accept as evidence, what you dismiss.
-- The seasonal → global path: have you seen a local win compound into Colosseum?
-- Anything from your PM/estimation writing that maps onto a hackathon month (estimates as predictions,
-  the 4–6 week MVP slice, the ≤7-step happy path, name the non-goals) — these are already in the voice
-  pack's substance bank and can be cited as your positions.
+| # | Fact (his words, condensed) | Kind | Lands in |
+|---|---|---|---|
+| F1 | Winners were always the ones with the most compelling presentation. It is not the best code or the most features; it is solving a problem that needs solving and selling that solution the right way. | stance, high | L2 (define winning), L11 (deck), course thesis |
+| F2 | Winning products did not *look* AI-made (the obviously AI-generated frontend) and were functional: not 100% complete, but complete enough for a demo. | stance, high | L7 (demoable slice), L9 (polish pass) |
+| F3 | Sometimes the pitch is worse than the product, and you lose on the pitch. If you believe in the idea, keep working and bring it to the next hackathon (check that season's rules on prior work). | stance + method | L14 (after the deadline); pairs with Colosseum's own Unruggable arc (4 seasons to a grand prize) |
+| F4 | **His win at the SuiHubs hackathon, Dubai.** He did not expect it: the idea was "too simple" and he had not planned a good demo. He won because the idea matched exactly what the organizers were looking for at the time, and the pitch was good enough to sell it. | named anecdote (burn: once) | L2 (read the rubric: match what they are looking for) |
+| F5 | **His worst mistake, last Colosseum edition:** too much focus on code, not enough planning of the presentation; realized near the end of the month. Should have planned the pitch from day 0 and kept improving it, and shown the project to more people for feedback. | named anecdote (burn: once) | L3 (day-0 plan) as the seam; drives structural change S1 below |
+| F6 | The demos he remembers opened on emotional attachment in the first 20 seconds: a problem people face in their own lives (wallet hacked, talking to a scammer, signing a malicious contract), told specifically, with the feeling of impotence at not being able to do anything about it. | observation | L12 (the two videos) |
+| F7 | Day-0 team needs a plan of action for the whole month. Someone must own competitor research (what they do right and wrong). Someone should go after adjacent projects as integration partners and sell them the idea; arriving at demo day with a few partners is an edge. | method | L3 (team + month plan), L5 (research role), L10 (GTM: partners) |
+| F8 | Good hackathon ideas came from problems the team members, or people close to them, face day to day. | observation | L4 (ideation) |
+| F9 | **Cloak**: a team of university students who won a track at a previous hackathon, got a large investment, and had a running company by graduation. *(probe: which hackathon, which track, investment size)* | third-party story, UNVERIFIED | L16 (local win compounds) / L14 |
+| F10 | **Bido**: two friends with no idea for a project went to Superteam Brazil mentoring sessions and ended up in Silicon Valley with a US$ 2M investment. *(probe: confirm with Kaue; name, round, date)* | third-party story, UNVERIFIED | L14 (after) / L16; also the M1 opener's "why this course" beat |
+
+Unanswered from the capture list (carry to session 2 or the outline review): what he accepts as
+one-week validation evidence (F-pending, L6), and whether he has seen a seasonal win reach Colosseum
+directly (F9/F10 partially answer it).
+
+### Structural changes these facts force (logged as S1–S3, applied in §6)
+
+- **S1 — the pitch is a living artifact from lesson 3, not a week-4 deliverable.** F5 is the
+  course's central war story and it says the calendar shape in the dossier is exactly the trap: deck
+  and pitch in week 4. So the ladder carries a **pitch draft from M1** that every module revises
+  (v0 one-liner at L3 → v1 after validation at L6 → v2 after the slice at L9 → final at L11), and a
+  **feedback loop** rung: show the pitch to N people per week, log what they did not get.
+- **S2 — a "does it look real" polish pass is its own lesson beat (F2).** L9 gains an explicit
+  anti-"AI-made" pass on the frontend and the demo path, before the roast/security pass.
+- **S3 — partners and competitors are roles, not topics (F7).** L3 assigns the competitor-research
+  owner and the partnerships owner on day 0; L5 and L10 consume their outputs. GTM at L10 includes
+  outreach to adjacent projects with the goal of naming partners on the deck.
 
 ## 6. Proposed shape (hypothesis for the outline; David reshapes)
 
@@ -168,16 +189,17 @@ Scale: **6 modules, 14 lessons + 1 optional module of 2** — btc-to-sol's neigh
 
 | Module (journey) | Lessons (skills) | Artifact rung |
 |---|---|---|
-| M1 Before the clock starts | 1 Opener: query the record (runs a Colosseum-corpus query in the first 150 words) · 2 Read the rubric: pick your surface, define winning · 3 The team on day 0 | surface brief + team card |
-| M2 Week 1: idea to evidence | 4 Ideation with structure (problem-first vs capability-first, gap vs past winners) · 5 Market research at hackathon speed (on-chain / DeFi data as evidence, not vibes) · 6 The validation sprint and the kill/pivot call | idea memo → evidence pack |
-| M3 Weeks 2–3: the demoable slice | 7 Product strategy: scope to what a judge can evaluate in 3 minutes · 8 Build sprint with an agent team (setup, scaffold, devnet) · 9 Capture the narrative while you build; roast + security pass | scope card → devnet demo slice + narrative log |
-| M4 Week 4: the story | 10 GTM: distribution hypothesis, why-Solana / why-now as a judged claim · 11 The hackathon deck (vs the investor deck) · 12 The two videos: presentation and demo | GTM one-pager → deck → videos |
-| M5 Submit, then keep going | 13 Submission mechanics per surface: Colosseum portal, Earn listing, seasonal platform; deadline math; disqualifiers · 14 After the deadline: interview, accelerator, grants, Earn, next season (conclusion) | submission package (capstone) |
-| M6 (optional) The seasonal hackathon | 15 Reading this season's page (Passo Fundo 2026 as the worked example) · 16 Sponsor tracks and how a local win compounds into the global season | seasonal adapter |
+| M1 Before the clock starts | 1 Opener: query the record (runs a Colosseum-corpus query in the first 150 words) · 2 Read the rubric: pick your surface, define winning (F1, F4) · 3 The team on day 0: the month plan, the competitor owner, the partnerships owner, **pitch v0** (F5, F7; S1, S3) | surface brief + team card + month plan + pitch v0 |
+| M2 Week 1: idea to evidence | 4 Ideation with structure: problems you and yours actually have; gap vs past winners (F8) · 5 Market research at hackathon speed: the competitor owner's map, on-chain / DeFi data as evidence, not vibes (F7) · 6 The validation sprint and the kill/pivot call; **pitch v1 + first feedback round** (S1) | idea memo → competitor map → evidence pack → pitch v1 |
+| M3 Weeks 2–3: the demoable slice | 7 Product strategy: scope to what a judge can evaluate in 3 minutes, complete enough for a demo (F2) · 8 Build sprint with an agent team (setup, scaffold, devnet) · 9 Capture the narrative while you build; the **"does it look real" pass** (F2; S2), then roast + security; **pitch v2 + second feedback round** (S1) | scope card → devnet demo slice → narrative log → pitch v2 |
+| M4 Week 4: the story | 10 GTM: distribution hypothesis, why-Solana / why-now as a judged claim, **partner outreach with named partners on the deck** (F7; S3) · 11 The hackathon deck vs the investor deck; pitch final (F1) · 12 The two videos: the first 20 seconds are a felt problem (F6); demo ≤3 min | GTM one-pager + partner list → deck → videos |
+| M5 Submit, then keep going | 13 Submission mechanics per surface: Colosseum portal, Earn listing, seasonal platform; deadline math; disqualifiers · 14 After the deadline: interview, accelerator, grants, Earn, and carrying a lost pitch into the next season (F3, F9, F10; Unruggable arc) (conclusion) | submission package (capstone) |
+| M6 (optional) The seasonal hackathon | 15 Reading this season's page (Passo Fundo 2026 as the worked example) · 16 Sponsor tracks and how a local win compounds into the global season (F9, F10) | seasonal adapter |
 
 Cadence: difficulty plateaus in M2 and M4 (research and writing skills), spikes in M3 (build) and
 lesson 13 (mechanics). Retrieval checkpoint after M2 (re-derive the rubric for an unseen season page)
-and before capstone (assemble the package from the rungs).
+and before capstone (assemble the package from the rungs). The pitch thread (S1) is the spiral: it
+reappears at L3, L6, L9, L11 and is the one artifact every module touches.
 
 ## 7. Timing
 
@@ -209,5 +231,7 @@ submission mechanics) are the ones a team mid-hackathon would pay for; flag as a
 | D3 | Agent tooling centrality | **Spine of the build, not the subject** | Promise stays "submission-ready package"; kit inventory is smaller than the dossier claims, so names are pinned facts with freshness notes, never the identity. | 2026-09-05 (David) |
 | D4 | Assessment model | **Quiz + artifact gates only; no coding challenges** | Process/strategy course; a TS challenge would grade a proxy, not the skill. `openEnded` reflections in strategy lessons; the capstone is the assembled package. §4's four TS challenge ideas are parked in the expansion memo. | 2026-09-05 (David) |
 | D5 | Course language | **EN source + PT-BR l10n overlay** (confirm with Kaue) | Voice pack is calibrated on English; repo supports overlays (academy-courses #51). Seasonal module gets the overlay first. | 2026-09-05 (David); Kaue to confirm |
-| D6 | Scale (modules / lessons) | _pending_ — proposal: 5 core modules / 14 lessons + optional M6 of 2 | btc-to-sol's neighborhood (7/15) per the brief. | |
-| D7 | Seasonal module optional vs core | _pending_ — default: optional (owner's default, kept under D1) | | |
+| D6 | Scale (modules / lessons) | **5 core modules / 14 lessons + optional M6 of 2** (default, taken as accepted unless David objects at outline review) | btc-to-sol's neighborhood (7/15) per the brief; S1–S3 fit inside existing lessons without adding any. | 2026-09-06 |
+| D7 | Seasonal module optional vs core | **Optional** (owner's default, kept under D1) | Seasonal is an adapter over the same package; F9/F10 give it its own payoff story. | 2026-09-06 |
+| D8 | Naming the chain in David's SuiHubs win (F4) | _pending David_ — default: tell it as "a hackathon in Dubai" without naming the chain | He ruled his other-chain judging out of the course; his own win is his story, but naming a competing chain in a Solana course is his call, not the writer's. | |
+| D9 | Third-party stories (Cloak, Bido) | **Write-time probes; not written until verified** | Names, outcomes and the US$ 2M figure are exactly the confidently-precise class the fact layer exists for. | 2026-09-06 |
