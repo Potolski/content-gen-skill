@@ -179,6 +179,11 @@ directly (F9/F10 partially answer it).
   **feedback loop** rung: show the pitch to N people per week, log what they did not get.
 - **S2 — a "does it look real" polish pass is its own lesson beat (F2).** L9 gains an explicit
   anti-"AI-made" pass on the frontend and the demo path, before the roast/security pass.
+- **S4 — one dedicated `concept-retrieval` lesson is mandatory (CATALOG §5, found in the register-bar
+  pass 2026-09-06).** The memo's retrieval checkpoint after M2 becomes a real lesson: "Re-derive
+  winning for a season you have never seen" (an unseen season page, the rubric brief, the evidence
+  pack graded against it, cumulative quiz with ≥1 item per skill tag). Count becomes 5 modules /
+  **15 lessons** + optional 2; D6 amended accordingly at outline review.
 - **S3 — partners and competitors are roles, not topics (F7).** L3 assigns the competitor-research
   owner and the partnerships owner on day 0; L5 and L10 consume their outputs. GTM at L10 includes
   outreach to adjacent projects with the goal of naming partners on the deck.
@@ -233,5 +238,8 @@ submission mechanics) are the ones a team mid-hackathon would pay for; flag as a
 | D5 | Course language | **EN source + PT-BR l10n overlay** (confirm with Kaue) | Voice pack is calibrated on English; repo supports overlays (academy-courses #51). Seasonal module gets the overlay first. | 2026-09-05 (David); Kaue to confirm |
 | D6 | Scale (modules / lessons) | **5 core modules / 14 lessons + optional M6 of 2** (default, taken as accepted unless David objects at outline review) | btc-to-sol's neighborhood (7/15) per the brief; S1–S3 fit inside existing lessons without adding any. | 2026-09-06 |
 | D7 | Seasonal module optional vs core | **Optional** (owner's default, kept under D1) | Seasonal is an adapter over the same package; F9/F10 give it its own payoff story. | 2026-09-06 |
-| D8 | Naming the chain in David's SuiHubs win (F4) | _pending David_ — default: tell it as "a hackathon in Dubai" without naming the chain | He ruled his other-chain judging out of the course; his own win is his story, but naming a competing chain in a Solana course is his call, not the writer's. | |
+| D8 | Naming the chain in David's win (F4) | **"A hackathon in Dubai"; chain not named** | His call: his own win is usable, the competing chain is not named in a Solana course. Writers must not add the chain back in. | 2026-09-06 (David) |
+| D11 | Creator wallet | **`8kMziL5e3qEWhp1nQHEiYLRypymyBVTXNxgZXyQwhbSo`** | David's wallet; immutable once the course is created on-chain. | 2026-09-06 (David) |
+| D12 | Worked-example domain | **"Fiado"** (corner-shop credit notebook → stablecoin-settled tab) | Day-to-day problem (F8), felt opener (F6), two-week slice, honest why-Solana. David re-reviews at outline review. | 2026-09-06 (David) |
+| D10 | Where the course PR lands | **`solanabr/academy-courses`, branch off fresh main, touch only `courses/solana-hackathon-expert/`, trackId 0 / trackLevel 0** | Elective lane per CATALOG.md addendum; PR #48's body is the template. | 2026-09-06 (David) |
 | D9 | Third-party stories (Cloak, Bido) | **Write-time probes; not written until verified** | Names, outcomes and the US$ 2M figure are exactly the confidently-precise class the fact layer exists for. | 2026-09-06 |
